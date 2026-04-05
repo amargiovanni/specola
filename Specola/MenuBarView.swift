@@ -36,15 +36,16 @@ struct MenuBarView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 24)
             } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(appState.history.prefix(10)) { entry in
-                            SpecolaRow(entry: entry)
-                                .onTapGesture { openSpecola(entry) }
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(appState.history.prefix(10))) { entry in
+                        SpecolaRow(entry: entry)
+                            .onTapGesture { openSpecola(entry) }
+                        if entry.id != appState.history.prefix(10).last?.id {
+                            Divider().padding(.leading, 34)
                         }
                     }
                 }
-                .frame(maxHeight: 300)
+                .frame(maxHeight: 320)
             }
 
             Divider()

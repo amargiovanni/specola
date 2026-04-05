@@ -45,6 +45,18 @@ enum EngineService {
         ]
         process.currentDirectoryURL = engineDir
 
+        // Inherit user's PATH so the Python engine can find `claude` CLI
+        var env = ProcessInfo.processInfo.environment
+        let extraPaths = [
+            "\(NSHomeDirectory())/.local/bin",
+            "\(NSHomeDirectory())/.claude/local",
+            "/usr/local/bin",
+            "/opt/homebrew/bin",
+        ]
+        let currentPath = env["PATH"] ?? "/usr/bin:/bin"
+        env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
+        process.environment = env
+
         let outputPipe = Pipe()
         let errorPipe = Pipe()
         process.standardOutput = outputPipe
