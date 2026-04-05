@@ -12,7 +12,7 @@ def analyze_with_claude(
     digest_path: Path,
     prompt: str,
     model: str | None = None,
-    timeout: int = 300,
+    timeout: int = 600,
 ) -> str | None:
     """Invoke Claude CLI with prompt and digest as stdin. Returns markdown or None."""
     cmd = ["claude", "-p", prompt]
