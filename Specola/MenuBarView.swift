@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
-    @State private var showSettings = false
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -79,8 +79,6 @@ struct MenuBarView: View {
                 Button("Impostazioni...") {
                     openSettings()
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.primary)
 
                 Spacer()
 
@@ -137,10 +135,6 @@ struct MenuBarView: View {
                 NotificationService.notifyError(message: error.localizedDescription)
             }
         }
-    }
-
-    private func openSettings() {
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     private func dateId() -> String {

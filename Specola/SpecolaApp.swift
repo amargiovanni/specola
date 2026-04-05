@@ -9,6 +9,7 @@ struct SpecolaApp: App {
         MenuBarExtra {
             MenuBarView()
                 .environment(appState)
+                .modifier(FirstLaunchModifier())
         } label: {
             Image(nsImage: MenuBarIcon.image(badgeCount: appState.unreadCount))
         }
@@ -39,12 +40,21 @@ struct SpecolaApp: App {
         }
         _scheduler = State(initialValue: schedulerInstance)
 
-        if !SpecolaSettings.hasCompletedSetup {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                SpecolaSettings.hasCompletedSetup = true
+        // First launch is handled by FirstLaunchModifier in the view
+    }
+}
+
+private struct FirstLaunchModifier: ViewModifier {
+    @Environment(\.openSettings) private var openSettings
+
+    func body(content: Content) -> some View {
+        content
+            .task {
+                if !SpecolaSettings.hasCompletedSetup {
+                    openSettings()
+                    SpecolaSettings.hasCompletedSetup = true
+                }
             }
-        }
     }
 }
 
