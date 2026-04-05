@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specola — Your Daily Observatory</title>
+    <meta name="description" content="A native macOS menubar app that delivers AI-analyzed RSS briefings as premium DOCX reports, tailored to your professional profile.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0d0f1a;
+            --navy-mid: #141829;
+            --navy-light: #1c2038;
+            --surface: #1a1e33;
+            --accent: #e94560;
+            --accent-glow: #e9456040;
+            --accent-soft: #e9456020;
+            --text: #c8cad8;
+            --text-bright: #ecedf5;
+            --text-dim: #6b6f8a;
+            --border: #2a2e48;
+            --link: #6ea8fe;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-color: var(--border) var(--navy);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--navy);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ═══ GRAIN OVERLAY ═══ */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ═══ NAVIGATION ═══ */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(20px);
+            background: #0d0f1acc;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.4s ease;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .nav-diamond {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            transform: rotate(45deg);
+            flex-shrink: 0;
+        }
+
+        .nav-title {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.25rem;
+            color: var(--text-bright);
+            letter-spacing: 0.08em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--text-bright); }
+
+        .nav-cta {
+            background: var(--accent) !important;
+            color: var(--navy) !important;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 500 !important;
+            transition: transform 0.2s, box-shadow 0.3s !important;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        /* ═══ HERO ═══ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 8rem 2rem 4rem;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            animation: pulse-glow 8s ease-in-out infinite;
+        }
+
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #2563eb15 0%, transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            animation: pulse-glow 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* Grid lines */
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 80px 80px;
+            opacity: 0.15;
+            mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 820px;
+            text-align: center;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards 0.2s;
+        }
+
+        .hero-eyebrow::before,
+        .hero-eyebrow::after {
+            content: '';
+            width: 24px;
+            height: 1px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .hero h1 {
+            font-family: 'Instrument Serif', serif;
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            line-height: 1.05;
+            color: var(--text-bright);
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards 0.4s;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text);
+            max-width: 560px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+            font-weight: 300;
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards 0.6s;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards 0.8s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            padding: 0.9rem 2.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            padding: 0.9rem 2.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 400;
+            font-size: 0.95rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-dim);
+            color: var(--text-bright);
+            background: var(--navy-light);
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══ FLOW SECTION ═══ */
+        .flow {
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .flow-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Instrument Serif', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            color: var(--text-bright);
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            max-width: 520px;
+            line-height: 1.8;
+            margin-bottom: 4rem;
+            font-weight: 300;
+        }
+
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .flow-step {
+            background: var(--navy-mid);
+            padding: 2.5rem 2rem;
+            position: relative;
+            transition: background 0.4s;
+        }
+
+        .flow-step:hover { background: var(--navy-light); }
+
+        .flow-step-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+            margin-bottom: 1.25rem;
+            opacity: 0.7;
+        }
+
+        .flow-step h3 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.35rem;
+            color: var(--text-bright);
+            font-weight: 400;
+            margin-bottom: 0.75rem;
+        }
+
+        .flow-step p {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--text-dim);
+        }
+
+        /* ═══ BRIEFING PREVIEW ═══ */
+        .preview {
+            padding: 6rem 2rem 8rem;
+            position: relative;
+        }
+
+        .preview-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .preview-text .section-desc { margin-bottom: 2rem; }
+
+        .briefing-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .briefing-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .briefing-section:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent-glow);
+        }
+
+        .briefing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: 0.55rem;
+            flex-shrink: 0;
+        }
+
+        .briefing-section strong {
+            display: block;
+            color: var(--text-bright);
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .briefing-section span {
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* DOCX mockup */
+        .docx-mockup {
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.1),
+                0 20px 60px rgba(0,0,0,0.5),
+                0 0 120px var(--accent-glow);
+            transform: perspective(800px) rotateY(-2deg) rotateX(1deg);
+            transition: transform 0.5s ease;
+        }
+
+        .docx-mockup:hover {
+            transform: perspective(800px) rotateY(0deg) rotateX(0deg);
+        }
+
+        .docx-header {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+            color: #9ca3af;
+        }
+
+        .docx-header .diamond {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            transform: rotate(45deg);
+            margin-right: 6px;
+        }
+
+        .docx-body {
+            padding: 2rem 2.5rem;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .docx-body h2 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.4rem;
+            color: #0d0f1a;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.25rem;
+            font-weight: 400;
+        }
+
+        .docx-body h3 {
+            font-size: 0.85rem;
+            color: #16213e;
+            border-left: 3px solid var(--accent);
+            padding-left: 0.75rem;
+            margin: 1.25rem 0 0.5rem;
+            font-weight: 600;
+        }
+
+        .docx-body p {
+            font-size: 0.78rem;
+            color: #374151;
+            line-height: 1.7;
+            margin-bottom: 0.5rem;
+        }
+
+        .docx-body a {
+            color: #2563eb;
+            text-decoration: underline;
+            font-size: 0.78rem;
+        }
+
+        .docx-body .tag {
+            display: inline-block;
+            background: #f0f3f8;
+            color: #16213e;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .docx-fade {
+            height: 60px;
+            background: linear-gradient(to bottom, transparent, white);
+            margin-top: -60px;
+            position: relative;
+        }
+
+        /* ═══ FEATURES ═══ */
+        .features {
+            padding: 6rem 2rem;
+            background: var(--navy-mid);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .features-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 4rem;
+        }
+
+        .feature {
+            background: var(--navy);
+            padding: 2.5rem;
+            transition: background 0.3s;
+        }
+
+        .feature:hover { background: var(--navy-light); }
+
+        .feature-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--accent-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            font-size: 1rem;
+        }
+
+        .feature h3 {
+            font-size: 1rem;
+            color: var(--text-bright);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            font-size: 0.88rem;
+            color: var(--text-dim);
+            line-height: 1.7;
+        }
+
+        /* ═══ ARCHITECTURE ═══ */
+        .arch {
+            padding: 6rem 2rem;
+        }
+
+        .arch-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .arch-diagram {
+            margin-top: 3rem;
+            background: var(--navy-mid);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.9;
+            color: var(--text-dim);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .arch-diagram .hl { color: var(--accent); }
+        .arch-diagram .bl { color: var(--link); }
+        .arch-diagram .wh { color: var(--text-bright); }
+
+        /* ═══ INSTALL ═══ */
+        .install {
+            padding: 6rem 2rem;
+            background: var(--navy-mid);
+            border-top: 1px solid var(--border);
+        }
+
+        .install-inner {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .install-code {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: left;
+            margin: 2.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 2;
+            color: var(--text);
+            overflow-x: auto;
+        }
+
+        .install-code .comment { color: var(--text-dim); }
+        .install-code .cmd { color: var(--text-bright); }
+        .install-code .flag { color: var(--accent); }
+
+        .install-note {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.8;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ═══ FOOTER ═══ */
+        footer {
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        footer a {
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        footer a:hover { color: var(--accent); }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .flow-steps { grid-template-columns: 1fr; }
+            .preview-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .docx-mockup { transform: none; }
+            .hero { padding: 7rem 1.5rem 3rem; }
+        }
+
+        /* ═══ SCROLL REVEAL ═══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a href="#" class="nav-brand">
+        <div class="nav-diamond"></div>
+        <span class="nav-title">Specola</span>
+    </a>
+    <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#briefing">The briefing</a>
+        <a href="#features">Features</a>
+        <a href="#architecture">Architecture</a>
+        <a href="https://github.com/amargiovanni/specola" class="nav-cta">GitHub</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-bg">
+        <div class="hero-grid"></div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-eyebrow">macOS Menubar App</div>
+        <h1>Your daily<br>observatory on<br>what <em>matters</em></h1>
+        <p class="hero-subtitle">
+            Specola fetches your RSS feeds, has Claude analyze them through the lens of your professional profile, and delivers a premium DOCX briefing every morning.
+        </p>
+        <div class="hero-actions">
+            <a href="https://github.com/amargiovanni/specola" class="btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                Get Specola
+            </a>
+            <a href="#how" class="btn-secondary">See how it works</a>
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="flow" id="how">
+    <div class="flow-inner">
+        <div class="reveal">
+            <div class="section-label">The process</div>
+            <h2 class="section-title">Three steps, zero effort</h2>
+            <p class="section-desc">Configure once, receive daily. Specola runs silently in your menubar and handles everything.</p>
+        </div>
+        <div class="flow-steps reveal">
+            <div class="flow-step">
+                <div class="flow-step-num">01 &mdash; FETCH</div>
+                <h3>Concurrent RSS harvest</h3>
+                <p>Specola parses your OPML file and fetches all feeds in parallel with 20 threads. Failed feeds are skipped gracefully &mdash; one broken source never blocks the rest.</p>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-num">02 &mdash; ANALYZE</div>
+                <h3>Claude reads everything</h3>
+                <p>The full digest is piped to Claude Code CLI with your professional profile. Claude prioritizes, connects dots, and writes analytical paragraphs &mdash; not one-line summaries.</p>
+            </div>
+            <div class="flow-step">
+                <div class="flow-step-num">03 &mdash; DELIVER</div>
+                <h3>Premium DOCX report</h3>
+                <p>The analysis is rendered into a professionally typeset document with clickable links, branded headers, accent colors, and clear visual hierarchy. Opens in Word, Pages, or Preview.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BRIEFING PREVIEW -->
+<section class="preview" id="briefing">
+    <div class="preview-inner">
+        <div class="preview-grid">
+            <div class="preview-text reveal">
+                <div class="section-label">The output</div>
+                <h2 class="section-title">Not a summary.<br>An analysis.</h2>
+                <p class="section-desc">Each Specola is a multi-page briefing with deep analysis, source links, and actionable insights tailored to your role.</p>
+                <div class="briefing-sections">
+                    <div class="briefing-section">
+                        <div class="briefing-dot"></div>
+                        <div>
+                            <strong>Da sapere oggi</strong>
+                            <span>5-7 key developments with context, implications, and direct links to sources</span>
+                        </div>
+                    </div>
+                    <div class="briefing-section">
+                        <div class="briefing-dot"></div>
+                        <div>
+                            <strong>Richiede attenzione</strong>
+                            <span>Actionable items: what happened, why it matters for you, what to do this week</span>
+                        </div>
+                    </div>
+                    <div class="briefing-section">
+                        <div class="briefing-dot"></div>
+                        <div>
+                            <strong>Per area tematica</strong>
+                            <span>3-4 sentence analytical paragraphs per item, connecting news to broader trends</span>
+                        </div>
+                    </div>
+                    <div class="briefing-section">
+                        <div class="briefing-dot"></div>
+                        <div>
+                            <strong>Da leggere con calma</strong>
+                            <span>Long reads worth your time, with a reason why for each</span>
+                        </div>
+                    </div>
+                    <div class="briefing-section">
+                        <div class="briefing-dot"></div>
+                        <div>
+                            <strong>Spunti</strong>
+                            <span>Concrete ideas for posts, reflections, or actions inspired by the day's news</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="reveal" style="animation-delay: 0.2s;">
+                <div class="docx-mockup">
+                    <div class="docx-header">
+                        <span><span class="diamond"></span> SPECOLA</span>
+                        <span>2026-04-05</span>
+                    </div>
+                    <div class="docx-body">
+                        <h2>Specola &mdash; Briefing del 5 aprile 2026</h2>
+                        <h3>Da sapere oggi</h3>
+                        <p><strong>L'AI Act entra nella fase esecutiva.</strong> Da oggi le aziende che operano nell'UE devono conformarsi ai requisiti di trasparenza per i sistemi ad alto rischio. Per chi sviluppa SaaS B2B, questo significa audit trail obbligatori e documentazione tecnica verificabile. <a href="#">(Il Sole 24 Ore)</a></p>
+                        <p><strong>GitHub lancia Copilot Workspace in GA.</strong> L'ambiente di sviluppo AI-first esce dalla beta. Integra planning, coding e testing in un flusso unico. Rilevante per team che stanno valutando l'adozione di AI coding tools. <a href="#">(GitHub Blog)</a></p>
+                        <h3>Richiede attenzione</h3>
+                        <p><span class="tag">AZIONE</span> La scadenza PSD3 per l'adeguamento delle API di pagamento si avvicina. Se il tuo prodotto gestisce transazioni B2B nell'eurozona, verifica la compliance entro il 15 aprile. <a href="#">(EBA)</a></p>
+                    </div>
+                    <div class="docx-fade"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+    <div class="features-inner">
+        <div class="reveal">
+            <div class="section-label">Why Specola</div>
+            <h2 class="section-title">Built for your workflow</h2>
+        </div>
+        <div class="features-grid reveal">
+            <div class="feature">
+                <div class="feature-icon">&#x1f6e1;</div>
+                <h3>No API keys, no cloud</h3>
+                <p>Runs entirely on your Mac using the Claude Code CLI. Your feeds and profile never leave your machine.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">&#x1f3af;</div>
+                <h3>Tailored to your profile</h3>
+                <p>Describe your role, stack, interests, and projects. Specola filters and prioritizes everything through your lens.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">&#x1f517;</div>
+                <h3>Every item has a source link</h3>
+                <p>Clickable hyperlinks to every original article. The briefing is a starting point, not a dead end.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">&#x23f0;</div>
+                <h3>Set and forget scheduling</h3>
+                <p>Pick your time, enable auto-generate. If your Mac is asleep, the briefing runs at wake. No launchd, no cron.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">&#x1f4c4;</div>
+                <h3>Premium DOCX output</h3>
+                <p>Branded headers, accent colors, clean typography, clickable links. Not a raw text dump &mdash; a document you'd share with your board.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">&#x1f30d;</div>
+                <h3>Italian &amp; English</h3>
+                <p>Full briefings in either language. Same depth, same structure, same quality. Switch anytime in Settings.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="arch" id="architecture">
+    <div class="arch-inner">
+        <div class="reveal">
+            <div class="section-label">Under the hood</div>
+            <h2 class="section-title">Two components, one contract</h2>
+            <p class="section-desc">The Swift app handles UI and scheduling. The Python engine does the thinking. They talk via JSON over stdout.</p>
+        </div>
+        <div class="arch-diagram reveal"><span class="wh">Swift App</span>                              <span class="wh">Python Engine</span>
+
+  MenuBarExtra          <span class="hl">───args──▶</span>      parse_opml()
+  Popover                                 fetch_feeds()  <span class="bl">20 threads</span>
+  Settings              <span class="hl">◀──JSON──</span>      build_prompt()
+  Scheduler  <span class="bl">60s timer</span>                  analyze_with_claude()  <span class="bl">subprocess</span>
+  Notifications                           generate_docx()
+
+  <span class="hl">~/Library/Application Support/Specola/</span>
+  ├── engine/.venv/     <span class="bl">auto-created on first launch</span>
+  ├── Feeds.opml        <span class="bl">copy of user's OPML</span>
+  ├── profile.md        <span class="bl">professional profile</span>
+  └── history.json      <span class="bl">last 30 briefings</span></div>
+    </div>
+</section>
+
+<!-- INSTALL -->
+<section class="install" id="install">
+    <div class="install-inner">
+        <div class="reveal">
+            <div class="section-label">Get started</div>
+            <h2 class="section-title">Three commands to<br>your first briefing</h2>
+        </div>
+        <div class="install-code reveal">
+<span class="comment"># Clone and build</span>
+<span class="cmd">git clone</span> https://github.com/amargiovanni/specola.git
+<span class="cmd">cd</span> specola
+<span class="cmd">xcodebuild</span> <span class="flag">-project</span> Specola.xcodeproj <span class="flag">-scheme</span> Specola <span class="flag">-configuration</span> Release <span class="flag">-derivedDataPath</span> build
+
+<span class="comment"># Install</span>
+<span class="cmd">cp -R</span> build/Build/Products/Release/Specola.app /Applications/
+        </div>
+        <p class="install-note reveal">
+            The Python engine is bundled inside the app. On first launch, Specola automatically sets up a virtual environment with all dependencies. Just make sure <code style="color:var(--accent);background:var(--accent-soft);padding:0.15rem 0.4rem;border-radius:3px;">claude</code> is in your PATH.
+        </p>
+        <div style="margin-top: 2.5rem;" class="reveal">
+            <a href="https://github.com/amargiovanni/specola" class="btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                View on GitHub
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>
+        <a href="https://github.com/amargiovanni/specola">Specola</a> &mdash; MIT License &mdash; Built with Swift, Python &amp; <a href="https://claude.ai/claude-code">Claude Code</a>
+    </p>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Nav shrink on scroll
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+    const nav = document.querySelector('nav');
+    if (window.scrollY > 100) {
+        nav.style.padding = '0.75rem 2rem';
+    } else {
+        nav.style.padding = '1.25rem 2rem';
+    }
+});
+</script>
+
+</body>
+</html>
