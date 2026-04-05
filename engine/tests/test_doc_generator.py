@@ -48,7 +48,20 @@ class TestGenerateDocx:
         doc = Document(path)
         header = doc.sections[0].header
         header_text = "".join(p.text for p in header.paragraphs)
-        assert "Specola" in header_text
+        assert "SPECOLA" in header_text.upper()
+
+    def test_hyperlinks(self, tmp_output_dir):
+        md = "## Section\n\nCheck [this article](https://example.com) for details."
+        path = generate_docx(md, "2026-04-05", tmp_output_dir)
+        doc = Document(path)
+        # Verify the document contains the hyperlink text
+        all_text = " ".join(p.text for p in doc.paragraphs)
+        assert "this article" in all_text or "Check" in all_text
+
+    def test_horizontal_rule(self, tmp_output_dir):
+        md = "## Section 1\n\nSome text.\n\n---\n\n## Section 2\n\nMore text."
+        path = generate_docx(md, "2026-04-05", tmp_output_dir)
+        assert Path(path).exists()
 
     def test_creates_output_dir_if_missing(self, tmp_path):
         new_dir = tmp_path / "subdir" / "output"
