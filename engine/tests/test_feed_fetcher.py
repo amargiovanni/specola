@@ -1,8 +1,15 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.feed_fetcher import parse_opml, strip_html, parse_item_date
+from src.feed_fetcher import (
+    _fetch_single_feed,
+    fetch_feeds,
+    parse_item_date,
+    parse_opml,
+    strip_html,
+)
 
 
 class TestParseOpml:
@@ -91,3 +98,116 @@ class TestParseItemDate:
         entry.updated = ""
         result = parse_item_date(entry)
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _make_entry(title="Test title", link="https://example.com", summary="Summary text",
+                published_parsed=None, published=None):
+    """Build a minimal feedparser-like entry object."""
+    entry = MagicMock()
+    entry.title = title
+    entry.link = link
+    entry.summary = summary
+    entry.description = None
+    entry.content = []
+    entry.published_parsed = published_parsed
+    entry.updated_parsed = None
+    entry.published = published or ""
+    entry.updated = ""
+    return entry
+
+
+def _make_parsed_feed(entries):
+    """Return a mock feedparser result with the given entries."""
+    fp = MagicMock()
+    fp.entries = entries
+    return fp
+
+
+# ---------------------------------------------------------------------------
+# TestFetchFeeds
+# ---------------------------------------------------------------------------
+
+class TestFetchFeeds:
+    """Tests for _fetch_single_feed and fetch_feeds."""
+
+    def test_fetches_and_filters_by_time(self):
+        """Recent items are included; items older than the window are excluded."""
+        now = datetime.now(tz=timezone.utc)
+        recent_parsed = now - timedelta(hours=1)
+        old_parsed = now - timedelta(hours=48)
+
+        # feedparser uses time.struct_time-like tuples via published_parsed
+        def dt_to_struct(dt):
+            return dt.timetuple()[:9]
+
+        recent_entry = _make_entry(title="Recent", published_parsed=dt_to_struct(recent_parsed))
+        old_entry = _make_entry(title="Old", published_parsed=dt_to_struct(old_parsed))
+
+        mock_feed = _make_parsed_feed([recent_entry, old_entry])
+        feed_info = {"title": "Test Feed", "xmlUrl": "https://example.com/rss"}
+
+        with patch("src.feed_fetcher.feedparser.parse", return_value=mock_feed):
+            category, items = _fetch_single_feed(feed_info, "Tech", hours=24, max_items=30)
+
+        assert category == "Tech"
+        titles = [i["title"] for i in items]
+        assert "Recent" in titles
+        assert "Old" not in titles
+
+    def test_includes_items_with_no_date(self):
+        """Items where date cannot be parsed are always included."""
+        no_date_entry = _make_entry(title="No Date", published_parsed=None, published="")
+        mock_feed = _make_parsed_feed([no_date_entry])
+        feed_info = {"title": "Test Feed", "xmlUrl": "https://example.com/rss"}
+
+        with patch("src.feed_fetcher.feedparser.parse", return_value=mock_feed):
+            category, items = _fetch_single_feed(feed_info, "Tech", hours=24, max_items=30)
+
+        assert len(items) == 1
+        assert items[0]["title"] == "No Date"
+        assert items[0]["published"] == "data n/d"
+
+    def test_respects_max_items(self):
+        """fetch_feeds enforces max_items per category."""
+        now = datetime.now(tz=timezone.utc)
+
+        def dt_to_struct(dt):
+            return dt.timetuple()[:9]
+
+        entries = [
+            _make_entry(title=f"Item {i}", published_parsed=dt_to_struct(now - timedelta(minutes=i)))
+            for i in range(10)
+        ]
+        mock_feed = _make_parsed_feed(entries)
+        feed_info = {"title": "Feed", "xmlUrl": "https://example.com/rss"}
+
+        with patch("src.feed_fetcher.feedparser.parse", return_value=mock_feed):
+            category, items = _fetch_single_feed(feed_info, "Tech", hours=24, max_items=3)
+
+        assert len(items) == 3
+
+    def test_strips_html_from_summary(self):
+        """HTML tags are removed from the summary field."""
+        entry = _make_entry(summary="<p>Hello <b>world</b></p>")
+        entry.published_parsed = datetime.now(tz=timezone.utc).timetuple()[:9]
+        mock_feed = _make_parsed_feed([entry])
+        feed_info = {"title": "Feed", "xmlUrl": "https://example.com/rss"}
+
+        with patch("src.feed_fetcher.feedparser.parse", return_value=mock_feed):
+            _, items = _fetch_single_feed(feed_info, "Tech", hours=24, max_items=30)
+
+        assert items[0]["summary"] == "Hello world"
+
+    def test_handles_feed_failure_gracefully(self):
+        """An exception during fetch does not crash; returns empty list."""
+        feed_info = {"title": "Broken Feed", "xmlUrl": "https://broken.example.com/rss"}
+
+        with patch("src.feed_fetcher.feedparser.parse", side_effect=Exception("network error")):
+            category, items = _fetch_single_feed(feed_info, "Tech", hours=24, max_items=30)
+
+        assert category == "Tech"
+        assert items == []
