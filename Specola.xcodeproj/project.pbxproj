@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		10BC3625F8D07969D1DEC37D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99B0441BAC5F66FE990561C2 /* Assets.xcassets */; };
 		155814A6E9E5A7B70DE7098D /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B556F8BFE313AD4A1A2ED4E1 /* MenuBarView.swift */; };
 		60A75FB9D83D88E200FD1571 /* SchedulerServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */; };
 		636CE1D72F4DBD9C90C3BD4B /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9761EF4F1B700676F612FFFA /* Settings.swift */; };
@@ -42,6 +43,7 @@
 		6C474C051AF17E6C65AC944E /* SchedulerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerService.swift; sourceTree = "<group>"; };
 		91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaApp.swift; sourceTree = "<group>"; };
 		9761EF4F1B700676F612FFFA /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		99B0441BAC5F66FE990561C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerServiceTests.swift; sourceTree = "<group>"; };
 		B556F8BFE313AD4A1A2ED4E1 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		B74BEAA22A38432CBADF135B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -67,6 +69,7 @@
 		15D26697EBAF2257676712EF /* Specola */ = {
 			isa = PBXGroup;
 			children = (
+				99B0441BAC5F66FE990561C2 /* Assets.xcassets */,
 				B74BEAA22A38432CBADF135B /* Info.plist */,
 				B556F8BFE313AD4A1A2ED4E1 /* MenuBarView.swift */,
 				234401155FD81501939B6119 /* SettingsView.swift */,
@@ -132,7 +135,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = DF03D41B82F0287FCE3CDDE2 /* Build configuration list for PBXNativeTarget "Specola" */;
 			buildPhases = (
+				AFF716AE3EA9DE3F23358CAB /* Bundle Python Engine */,
 				A03ABE9F49C08A0394EE8D50 /* Sources */,
+				84A1E1745C0A7A0AE9DDBF98 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -191,6 +196,38 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		84A1E1745C0A7A0AE9DDBF98 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				10BC3625F8D07969D1DEC37D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AFF716AE3EA9DE3F23358CAB /* Bundle Python Engine */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle Python Engine";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Bundle Python engine into app Resources\nENGINE_SRC=\"${PROJECT_DIR}/engine\"\nENGINE_DST=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/Resources/engine\"\nrm -rf \"$ENGINE_DST\"\nmkdir -p \"$ENGINE_DST/src\"\ncp \"$ENGINE_SRC/specola_engine.py\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/requirements.txt\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/setup_engine.sh\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/src/__init__.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/feed_fetcher.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/prompt_builder.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/analyzer.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/doc_generator.py\" \"$ENGINE_DST/src/\"\nchmod +x \"$ENGINE_DST/setup_engine.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4BE0B009B07DCF91C46F7C10 /* Sources */ = {

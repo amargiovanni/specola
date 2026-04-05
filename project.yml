@@ -17,6 +17,23 @@ targets:
     platform: macOS
     sources:
       - path: Specola
+    preBuildScripts:
+      - script: |
+          # Bundle Python engine into app Resources
+          ENGINE_SRC="${PROJECT_DIR}/engine"
+          ENGINE_DST="${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/Resources/engine"
+          rm -rf "$ENGINE_DST"
+          mkdir -p "$ENGINE_DST/src"
+          cp "$ENGINE_SRC/specola_engine.py" "$ENGINE_DST/"
+          cp "$ENGINE_SRC/requirements.txt" "$ENGINE_DST/"
+          cp "$ENGINE_SRC/setup_engine.sh" "$ENGINE_DST/"
+          cp "$ENGINE_SRC/src/__init__.py" "$ENGINE_DST/src/"
+          cp "$ENGINE_SRC/src/feed_fetcher.py" "$ENGINE_DST/src/"
+          cp "$ENGINE_SRC/src/prompt_builder.py" "$ENGINE_DST/src/"
+          cp "$ENGINE_SRC/src/analyzer.py" "$ENGINE_DST/src/"
+          cp "$ENGINE_SRC/src/doc_generator.py" "$ENGINE_DST/src/"
+          chmod +x "$ENGINE_DST/setup_engine.sh"
+        name: Bundle Python Engine
     settings:
       base:
         INFOPLIST_FILE: Specola/Info.plist
@@ -24,6 +41,7 @@ targets:
         PRODUCT_NAME: Specola
         CODE_SIGN_ENTITLEMENTS: ""
         ENABLE_APP_SANDBOX: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
   SpecolaTests:
     type: bundle.unit-test
