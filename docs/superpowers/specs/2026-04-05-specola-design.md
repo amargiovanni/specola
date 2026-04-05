@@ -11,7 +11,7 @@ Specola fetches RSS feeds from an OPML file, has Claude Code CLI analyze and pri
 Two independent components communicating via Process/stdout JSON:
 
 ```
-┌─────────────────────┐         CLI args          ┌─────────────────────┐
+┌─────────────────────┐         CLI args           ┌─────────────────────┐
 │   Swift App (UI)    │ ──────────────────────────▶│   Python Engine     │
 │                     │                            │                     │
 │  - Menubar + badge  │         JSON stdout        │  - Feed fetching    │
