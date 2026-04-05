@@ -28,6 +28,8 @@ logger = logging.getLogger("specola")
 CATEGORY_TIMEOUT = 120
 SYNTHESIS_TIMEOUT = 180
 
+_SAFE_FILENAME_RE = __import__("re").compile(r"[^\w\-]+")
+
 
 def _output_json(data: dict) -> None:
     print(json.dumps(data, ensure_ascii=False))
@@ -54,7 +56,8 @@ def _analyze_categories(
 
         # Build mini-digest for this category
         mini_digest = format_digest({category: items}, date.today().isoformat())
-        digest_path = work_dir / f"cat_{category.replace(' ', '_')}_{today}.md"
+        safe_name = _SAFE_FILENAME_RE.sub("_", category).strip("_")
+        digest_path = work_dir / f"cat_{safe_name}_{today}.md"
         digest_path.write_text(mini_digest, encoding="utf-8")
 
         # Build prompt and call Claude
