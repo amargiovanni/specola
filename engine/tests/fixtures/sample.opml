@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Test Feeds</title></head>
+  <body>
+    <outline text="01 – Tech" title="01 – Tech">
+      <outline type="rss" text="Hacker News" title="Hacker News"
+               xmlUrl="https://news.ycombinator.com/rss"
+               htmlUrl="https://news.ycombinator.com"/>
+      <outline type="rss" text="TechCrunch" title="TechCrunch"
+               xmlUrl="https://techcrunch.com/feed/"
+               htmlUrl="https://techcrunch.com"/>
+    </outline>
+    <outline text="02 – Business" title="02 – Business">
+      <outline type="rss" text="Bloomberg" title="Bloomberg"
+               xmlUrl="https://feeds.bloomberg.com/markets/news.rss"
+               htmlUrl="https://bloomberg.com"/>
+    </outline>
+    <outline text="Dev Tools" title="Dev Tools">
+      <outline type="rss" text="GitHub Blog" title="GitHub Blog"
+               xmlUrl="https://github.blog/feed/"
+               htmlUrl="https://github.blog"/>
+    </outline>
+  </body>
+</opml>
