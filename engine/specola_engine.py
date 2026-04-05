@@ -6,7 +6,7 @@ import argparse
 import json
 import logging
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 # Add src to path
@@ -40,7 +40,9 @@ def run_engine(
     else:
         logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
 
-    today = date.today().isoformat()
+    now = datetime.now()
+    today = now.strftime("%Y-%m-%d_%H%M")  # e.g. "2026-04-05_1930"
+    today_date = date.today().isoformat()   # e.g. "2026-04-05" for display
 
     # 1. Parse OPML
     try:
@@ -72,14 +74,14 @@ def run_engine(
     # 3. Generate digest markdown
     work_dir = Path(__file__).parent / ".work"
     work_dir.mkdir(exist_ok=True)
-    digest = format_digest(items_by_category, today)
+    digest = format_digest(items_by_category, today_date)
     digest_path = work_dir / f"digest_{today}.md"
     digest_path.write_text(digest, encoding="utf-8")
 
     # 4. Build prompt
     profile_text = Path(profile).read_text(encoding="utf-8")
     categories = list(items_by_category.keys())
-    prompt = build_prompt(profile_text, language, categories, today)
+    prompt = build_prompt(profile_text, language, categories, today_date)
 
     # 5. Analyze with Claude
     logger.info("Invoking Claude CLI...")

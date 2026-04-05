@@ -139,7 +139,7 @@ struct MenuBarView: View {
 
     private func dateId() -> String {
         let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.dateFormat = "yyyy-MM-dd_HHmm"
         return fmt.string(from: Date())
     }
 }

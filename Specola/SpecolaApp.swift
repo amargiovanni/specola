@@ -92,7 +92,7 @@ private func triggerGeneration(appState: AppState) {
             let result = try await EngineService.run()
             let dateId = {
                 let fmt = DateFormatter()
-                fmt.dateFormat = "yyyy-MM-dd"
+                fmt.dateFormat = "yyyy-MM-dd_HHmm"
                 return fmt.string(from: Date())
             }()
 

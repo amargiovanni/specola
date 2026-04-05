@@ -100,9 +100,15 @@ def _setup_page(doc: Document) -> None:
     section.right_margin = Cm(2.5)
 
 
+def _display_date(date: str) -> str:
+    """Extract display date from timestamp. '2026-04-05_1930' -> '2026-04-05'."""
+    return date.split("_")[0] if "_" in date else date
+
+
 def _setup_header_footer(doc: Document, date: str) -> None:
     """Add styled header and footer."""
     section = doc.sections[0]
+    display = _display_date(date)
 
     # Header — thin line with Specola branding
     header = section.header
@@ -124,7 +130,7 @@ def _setup_header_footer(doc: Document, date: str) -> None:
     hp.runs[-1].font.size = Pt(8)
     hp.runs[-1].font.color.rgb = RGBColor.from_string(_LIGHT_GRAY)
 
-    run_right = hp.add_run(date)
+    run_right = hp.add_run(display)
     run_right.font.size = Pt(8)
     run_right.font.color.rgb = RGBColor.from_string(_GRAY)
 
