@@ -1,3 +1,4 @@
 .superpowers/
 engine/.venv/
 engine/.work/
+**/.DS_Store
