@@ -1,0 +1,39 @@
+name: Specola
+options:
+  bundleIdPrefix: com.oltrematica
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  Specola:
+    type: application
+    platform: macOS
+    sources:
+      - path: Specola
+    settings:
+      base:
+        INFOPLIST_FILE: Specola/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.oltrematica.specola
+        PRODUCT_NAME: Specola
+        CODE_SIGN_ENTITLEMENTS: ""
+        ENABLE_APP_SANDBOX: false
+
+  SpecolaTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: SpecolaTests
+    dependencies:
+      - target: Specola
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oltrematica.specola.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Specola.app/Contents/MacOS/Specola"
+        BUNDLE_LOADER: "$(TEST_HOST)"

@@ -1,0 +1,383 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		24837F8644822BA3905B9AE0 /* SpecolaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD617EFB0246B25CCA0EE1F0 /* SpecolaTests.swift */; };
+		9223E104A3ABEEB7F8F53DD4 /* SpecolaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		502FDDB338A0E5EB185BBEDE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A6EB78C0A83174F3498FC470 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E273402375698A851E1D5C;
+			remoteInfo = Specola;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpecolaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaApp.swift; sourceTree = "<group>"; };
+		B74BEAA22A38432CBADF135B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BD617EFB0246B25CCA0EE1F0 /* SpecolaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaTests.swift; sourceTree = "<group>"; };
+		EC4F3FD038FBBC771E3213E6 /* Specola.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Specola.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		15D26697EBAF2257676712EF /* Specola */ = {
+			isa = PBXGroup;
+			children = (
+				B74BEAA22A38432CBADF135B /* Info.plist */,
+				91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */,
+			);
+			path = Specola;
+			sourceTree = "<group>";
+		};
+		1C339AC4937AD4D7758BCC38 /* SpecolaTests */ = {
+			isa = PBXGroup;
+			children = (
+				BD617EFB0246B25CCA0EE1F0 /* SpecolaTests.swift */,
+			);
+			path = SpecolaTests;
+			sourceTree = "<group>";
+		};
+		60A65073DE9783D29129F345 = {
+			isa = PBXGroup;
+			children = (
+				15D26697EBAF2257676712EF /* Specola */,
+				1C339AC4937AD4D7758BCC38 /* SpecolaTests */,
+				746F7B17F0A3F1F594E743EC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		746F7B17F0A3F1F594E743EC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EC4F3FD038FBBC771E3213E6 /* Specola.app */,
+				5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		27E273402375698A851E1D5C /* Specola */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DF03D41B82F0287FCE3CDDE2 /* Build configuration list for PBXNativeTarget "Specola" */;
+			buildPhases = (
+				A03ABE9F49C08A0394EE8D50 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Specola;
+			packageProductDependencies = (
+			);
+			productName = Specola;
+			productReference = EC4F3FD038FBBC771E3213E6 /* Specola.app */;
+			productType = "com.apple.product-type.application";
+		};
+		53C1FF9BA87DDDF7F3095568 /* SpecolaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 39674F22428D97F89E82BED4 /* Build configuration list for PBXNativeTarget "SpecolaTests" */;
+			buildPhases = (
+				4BE0B009B07DCF91C46F7C10 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A3727852BD49BB45EA6ADB2A /* PBXTargetDependency */,
+			);
+			name = SpecolaTests;
+			packageProductDependencies = (
+			);
+			productName = SpecolaTests;
+			productReference = 5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A6EB78C0A83174F3498FC470 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+			};
+			buildConfigurationList = 6B36EF2AAD0B8107999B8CEC /* Build configuration list for PBXProject "Specola" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 60A65073DE9783D29129F345;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				27E273402375698A851E1D5C /* Specola */,
+				53C1FF9BA87DDDF7F3095568 /* SpecolaTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4BE0B009B07DCF91C46F7C10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				24837F8644822BA3905B9AE0 /* SpecolaTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A03ABE9F49C08A0394EE8D50 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9223E104A3ABEEB7F8F53DD4 /* SpecolaApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A3727852BD49BB45EA6ADB2A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E273402375698A851E1D5C /* Specola */;
+			targetProxy = 502FDDB338A0E5EB185BBEDE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0C27E37A8FF2C412B00AFA42 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oltrematica.specola.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Specola.app/Contents/MacOS/Specola";
+			};
+			name = Debug;
+		};
+		641173A4A16FD3CFAC770CFC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		6F5E7CFDA837E672ADC4FD92 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = NO;
+				INFOPLIST_FILE = Specola/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oltrematica.specola;
+				PRODUCT_NAME = Specola;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		7DDE26AE53F868F57CD8A4AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oltrematica.specola.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Specola.app/Contents/MacOS/Specola";
+			};
+			name = Release;
+		};
+		E4C8654745410AC85A79A990 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = NO;
+				INFOPLIST_FILE = Specola/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oltrematica.specola;
+				PRODUCT_NAME = Specola;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		F2DD49A573CA0897F5E08004 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		39674F22428D97F89E82BED4 /* Build configuration list for PBXNativeTarget "SpecolaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0C27E37A8FF2C412B00AFA42 /* Debug */,
+				7DDE26AE53F868F57CD8A4AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6B36EF2AAD0B8107999B8CEC /* Build configuration list for PBXProject "Specola" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2DD49A573CA0897F5E08004 /* Debug */,
+				641173A4A16FD3CFAC770CFC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DF03D41B82F0287FCE3CDDE2 /* Build configuration list for PBXNativeTarget "Specola" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6F5E7CFDA837E672ADC4FD92 /* Debug */,
+				E4C8654745410AC85A79A990 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A6EB78C0A83174F3498FC470 /* Project object */;
+}
