@@ -35,5 +35,6 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oltrematica.specola.tests
+        GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Specola.app/Contents/MacOS/Specola"
         BUNDLE_LOADER: "$(TEST_HOST)"

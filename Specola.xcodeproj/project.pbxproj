@@ -7,8 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		24837F8644822BA3905B9AE0 /* SpecolaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD617EFB0246B25CCA0EE1F0 /* SpecolaTests.swift */; };
+		60A75FB9D83D88E200FD1571 /* SchedulerServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */; };
+		636CE1D72F4DBD9C90C3BD4B /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9761EF4F1B700676F612FFFA /* Settings.swift */; };
+		7D38C09869150EECE70B58F9 /* SpecolaEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1AAAE622D9D446C7F89651 /* SpecolaEntryTests.swift */; };
+		8ED034F8ABD59B679A3E1B25 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E378F2B9EB98EC3BE89EAE15 /* AppState.swift */; };
 		9223E104A3ABEEB7F8F53DD4 /* SpecolaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */; };
+		B23F43A64422CBF13075BA1C /* SpecolaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677F47EA78B57BE72B75437D /* SpecolaEntry.swift */; };
+		B5C4D639CE7AE0E874EAB7FE /* EngineServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97916B60C2AB5DC6EFD9BB5 /* EngineServiceTests.swift */; };
+		DEF6D0B032711C46AC95CAC2 /* EngineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923C368DD10FD9CAFF4885C /* EngineService.swift */; };
+		E3028105E46C54D644918583 /* AppStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594D41A7355DC15E72FBBAA9 /* AppStateTests.swift */; };
+		EBE6044F3C6B2C4580CFD935 /* SchedulerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C474C051AF17E6C65AC944E /* SchedulerService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,19 +30,38 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4D1AAAE622D9D446C7F89651 /* SpecolaEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaEntryTests.swift; sourceTree = "<group>"; };
+		594D41A7355DC15E72FBBAA9 /* AppStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateTests.swift; sourceTree = "<group>"; };
 		5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpecolaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		677F47EA78B57BE72B75437D /* SpecolaEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaEntry.swift; sourceTree = "<group>"; };
+		6C474C051AF17E6C65AC944E /* SchedulerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerService.swift; sourceTree = "<group>"; };
 		91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaApp.swift; sourceTree = "<group>"; };
+		9761EF4F1B700676F612FFFA /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerServiceTests.swift; sourceTree = "<group>"; };
 		B74BEAA22A38432CBADF135B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		BD617EFB0246B25CCA0EE1F0 /* SpecolaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaTests.swift; sourceTree = "<group>"; };
+		B97916B60C2AB5DC6EFD9BB5 /* EngineServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineServiceTests.swift; sourceTree = "<group>"; };
+		E378F2B9EB98EC3BE89EAE15 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		EC4F3FD038FBBC771E3213E6 /* Specola.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Specola.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F923C368DD10FD9CAFF4885C /* EngineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0CD2DCD9BF1BEE660EB9F8B8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F923C368DD10FD9CAFF4885C /* EngineService.swift */,
+				6C474C051AF17E6C65AC944E /* SchedulerService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		15D26697EBAF2257676712EF /* Specola */ = {
 			isa = PBXGroup;
 			children = (
 				B74BEAA22A38432CBADF135B /* Info.plist */,
 				91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */,
+				D6C14A3B087CC7E6048040E2 /* Models */,
+				0CD2DCD9BF1BEE660EB9F8B8 /* Services */,
 			);
 			path = Specola;
 			sourceTree = "<group>";
@@ -42,7 +69,10 @@
 		1C339AC4937AD4D7758BCC38 /* SpecolaTests */ = {
 			isa = PBXGroup;
 			children = (
-				BD617EFB0246B25CCA0EE1F0 /* SpecolaTests.swift */,
+				594D41A7355DC15E72FBBAA9 /* AppStateTests.swift */,
+				B97916B60C2AB5DC6EFD9BB5 /* EngineServiceTests.swift */,
+				9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */,
+				4D1AAAE622D9D446C7F89651 /* SpecolaEntryTests.swift */,
 			);
 			path = SpecolaTests;
 			sourceTree = "<group>";
@@ -63,6 +93,16 @@
 				5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D6C14A3B087CC7E6048040E2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E378F2B9EB98EC3BE89EAE15 /* AppState.swift */,
+				9761EF4F1B700676F612FFFA /* Settings.swift */,
+				677F47EA78B57BE72B75437D /* SpecolaEntry.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -137,7 +177,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				24837F8644822BA3905B9AE0 /* SpecolaTests.swift in Sources */,
+				E3028105E46C54D644918583 /* AppStateTests.swift in Sources */,
+				B5C4D639CE7AE0E874EAB7FE /* EngineServiceTests.swift in Sources */,
+				60A75FB9D83D88E200FD1571 /* SchedulerServiceTests.swift in Sources */,
+				7D38C09869150EECE70B58F9 /* SpecolaEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,7 +188,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8ED034F8ABD59B679A3E1B25 /* AppState.swift in Sources */,
+				DEF6D0B032711C46AC95CAC2 /* EngineService.swift in Sources */,
+				EBE6044F3C6B2C4580CFD935 /* SchedulerService.swift in Sources */,
+				636CE1D72F4DBD9C90C3BD4B /* Settings.swift in Sources */,
 				9223E104A3ABEEB7F8F53DD4 /* SpecolaApp.swift in Sources */,
+				B23F43A64422CBF13075BA1C /* SpecolaEntry.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -165,6 +213,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -255,6 +304,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
