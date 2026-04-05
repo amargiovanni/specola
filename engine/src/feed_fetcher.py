@@ -203,3 +203,49 @@ def fetch_feeds(
         results[cat] = results[cat][:max_items]
 
     return results
+
+
+def format_digest(items_by_category: dict, date: str) -> str:
+    """Format fetched items as a markdown digest.
+
+    Args:
+        items_by_category: {category: [FeedItem, ...]}
+        date: date string for the header
+
+    Returns:
+        Markdown string with # header, ## per category, ### per item.
+        Returns a "no articles" message if the dict is empty or all lists empty.
+    """
+    if not items_by_category:
+        return "Nessun articolo trovato nel periodo selezionato."
+
+    # Check if there are any items at all
+    total = sum(len(v) for v in items_by_category.values())
+    if total == 0:
+        return "Nessun articolo trovato nel periodo selezionato."
+
+    lines: list[str] = [f"# Feed Digest — {date}", ""]
+
+    for category, items in items_by_category.items():
+        if not items:
+            continue
+
+        lines.append(f"## {category}")
+        lines.append("")
+
+        for item in items:
+            title = item.get("title", "")
+            source = item.get("source", "")
+            published = item.get("published", "")
+            link = item.get("link", "")
+            summary = item.get("summary", "")
+
+            lines.append(f"### {title} ({source})")
+            lines.append(f"**Data:** {published}")
+            if link:
+                lines.append(f"**Link:** {link}")
+            if summary:
+                lines.append(f"{summary}")
+            lines.append("")
+
+    return "\n".join(lines)

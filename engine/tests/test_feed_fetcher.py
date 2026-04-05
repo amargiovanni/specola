@@ -6,6 +6,7 @@ import pytest
 from src.feed_fetcher import (
     _fetch_single_feed,
     fetch_feeds,
+    format_digest,
     parse_item_date,
     parse_opml,
     strip_html,
@@ -211,3 +212,34 @@ class TestFetchFeeds:
 
         assert category == "Tech"
         assert items == []
+
+
+# ---------------------------------------------------------------------------
+# TestFormatDigest
+# ---------------------------------------------------------------------------
+
+class TestFormatDigest:
+    """Tests for format_digest."""
+
+    def test_produces_markdown_with_categories(self, sample_items_by_category):
+        result = format_digest(sample_items_by_category, "2026-04-05")
+        assert result.startswith("# Feed Digest — 2026-04-05")
+        assert "\n## Tech\n" in result
+        assert "\n## Business\n" in result
+
+    def test_includes_item_details(self, sample_items_by_category):
+        result = format_digest(sample_items_by_category, "2026-04-05")
+        assert "OpenAI releases GPT-5" in result
+        assert "TechCrunch" in result
+        assert "https://example.com/gpt5" in result
+        assert "OpenAI has announced GPT-5" in result
+
+    def test_empty_categories(self):
+        result = format_digest({}, "2026-04-05")
+        assert result == "Nessun articolo trovato nel periodo selezionato."
+
+    def test_returns_category_count(self, sample_items_by_category):
+        result = format_digest(sample_items_by_category, "2026-04-05")
+        count = result.count("\n## ")
+        # sample_items_by_category has Tech and Business (2 categories with items)
+        assert count == 2
