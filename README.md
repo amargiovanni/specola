@@ -22,179 +22,395 @@ The name comes from *specola*: the observatory tower from which astronomers scan
      fetching           and interests             DOCX reader
 ```
 
-1. **You configure** your RSS feeds (OPML) and describe your professional profile
-2. **Every day at your chosen time**, Specola fetches all feeds concurrently
-3. **Claude Code CLI** analyzes the digest and produces a structured briefing tailored to you
-4. **A DOCX file** lands in your Documents folder — ready to read, share, or archive
+1. **You configure** your RSS feeds (OPML file) and describe your professional profile in plain text
+2. **Every day at your chosen time**, Specola fetches all feeds concurrently (up to 20 threads)
+3. **Claude Code CLI** analyzes the full digest and produces a deep, structured briefing tailored to your role, stack, and interests
+4. **A premium DOCX file** lands in your Documents folder — professionally formatted, with clickable source links, ready to read, share, or archive
 
-No API keys needed. No cloud service. Just the Claude Code CLI on your Mac.
+No API keys needed. No cloud service. No subscription. Just the Claude Code CLI on your Mac.
+
+---
 
 ## What You Get
 
-Each briefing ("Specola") contains:
+Each briefing ("Specola") is a multi-page document with in-depth analysis, not a superficial summary. Every item includes a clickable link to the original source.
 
-- **Da sapere oggi** — The 3-5 things that matter most for your profile
-- **Richiede attenzione** — Developments that need action this week
-- **Per area tematica** — Deep coverage by category, ranked by relevance
-- **Da leggere con calma** — Long reads worth your time
-- **Spunti** — Ideas for posts, reflections, or next moves
+### Briefing Structure
 
-Everything sourced, nothing invented.
+| Section | What's inside |
+|---------|--------------|
+| **Da sapere oggi** | 5-7 key developments with context, implications, and source links |
+| **Richiede attenzione** | Actionable items for the week — what happened, why it matters *for you*, what to do |
+| **Per area tematica** | Deep analysis by category — 3-4 sentence paragraphs connecting news to broader trends |
+| **Da leggere con calma** | Long reads worth your time, with a reason *why* for each |
+| **Spunti** | 3-5 concrete ideas for posts, reflections, or actions inspired by the day's news |
+
+### DOCX Formatting
+
+The output is a professionally typeset document, not a raw text dump:
+
+- **Hero title** with accent underline in the Specola brand red
+- **Section headers** with colored left border accents and bottom rules
+- **Clickable hyperlinks** to every source article (blue, underlined, working in Word/Pages/Preview)
+- **Branded header** with diamond accent, "SPECOLA" branding, and date
+- **Clean typography** — Calibri, refined spacing, dark text on white, 1.3 line height
+- **Horizontal separators** between major sections
+- **Bold emphasis** in dark blue for key terms and news titles
+- **Page numbers** in a subtle footer with top rule
+
+Available in **Italian** and **English**.
+
+---
 
 ## Requirements
 
-- **macOS 14 (Sonoma)** or later
-- **Claude Code CLI** installed and working (`claude` in your PATH)
-- **Python 3.9+** (ships with macOS or install via Homebrew)
-- An **OPML file** with your RSS feeds
+| Requirement | Details |
+|-------------|---------|
+| **macOS** | 14 (Sonoma) or later |
+| **Claude Code CLI** | Installed and in your PATH — [installation guide](https://docs.anthropic.com/en/docs/claude-code) |
+| **Python** | 3.9+ (ships with macOS, or install via `brew install python`) |
+| **RSS feeds** | An OPML file exported from any feed reader (Feedly, NetNewsWire, Inoreader, etc.) |
+
+---
 
 ## Installation
 
+### From source (recommended)
+
 ```bash
-# Clone the repository
-git clone https://github.com/user/specola.git
+# Clone
+git clone https://github.com/amargiovanni/specola.git
 cd specola
 
-# Build the app
-xcodebuild -project Specola.xcodeproj -scheme Specola -configuration Release build
+# Build the Release app
+xcodebuild -project Specola.xcodeproj -scheme Specola \
+    -configuration Release -derivedDataPath build
 
-# The engine sets itself up on first launch, or manually:
-cd engine
-./setup_engine.sh
+# Copy to Applications
+cp -R build/Build/Products/Release/Specola.app /Applications/
 ```
 
-Open the built app from Xcode's DerivedData, or run it directly from Xcode.
+The Python engine is **bundled inside the app**. On first launch, Specola automatically copies it to `~/Library/Application Support/Specola/engine/` and creates a virtual environment with all dependencies. No manual Python setup required.
+
+### Prerequisites
+
+If you need to regenerate the Xcode project (e.g., after modifying `project.yml`):
+
+```bash
+brew install xcodegen
+xcodegen generate
+```
+
+---
 
 ## Quick Start
 
-1. **Launch Specola** — a binoculars icon appears in your menubar
-2. **Open Settings** (click the icon, then "Impostazioni...")
-3. **Import your OPML** file in the "Fonti" tab
-4. **Write your profile** in the "Profilo" tab — describe your role, stack, interests
-5. **Click "Genera ora"** to create your first briefing
-6. The DOCX opens automatically. Tomorrow's will arrive on schedule.
+1. **Launch Specola** from Applications — a binoculars icon appears in your menubar
+2. **Click the icon** to open the popover
+3. **Click "Impostazioni..."** to open the Settings window
+4. **Fonti tab** — click "Scegli file OPML..." and import your feeds
+5. **Profilo tab** — describe your role, stack, interests, and projects in plain text. The more detail you provide, the better Specola personalizes the briefing
+6. **Close Settings** and click **"Genera ora"** in the popover
+7. Wait a few minutes — Specola fetches all feeds, sends the digest to Claude for analysis, and renders the DOCX
+8. A macOS notification appears when done. The DOCX opens with a click.
+
+From tomorrow, the briefing generates automatically at your configured time. If your Mac is asleep, it runs as soon as it wakes up.
+
+### Profile Tips
+
+The profile is free-form text. The richer it is, the more relevant the briefing. Example:
+
+> Sono CTO di una startup fintech a Milano. Stack: Node.js, TypeScript, AWS Lambda, PostgreSQL. Mi interessa: regolamentazione EU (AI Act, PSD3, DORA), sicurezza API, trend VC europeo, open source. Sto valutando la migrazione a Bun. Progetti attivi: piattaforma di pagamenti B2B, integrazione con PagoPA.
+
+---
 
 ## Architecture
 
-Specola is two components talking via JSON over stdout:
+Specola is a two-component system. The Swift app handles UI and scheduling; the Python engine does the heavy lifting. They communicate via a simple contract: CLI arguments in, JSON on stdout out.
 
-### Swift App (UI + orchestration)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        macOS (.app)                             │
+│                                                                 │
+│  ┌──────────────────┐         ┌──────────────────────────────┐  │
+│  │  Swift App (UI)  │         │     Python Engine (CLI)      │  │
+│  │                  │  args   │                              │  │
+│  │  MenuBarExtra    │────────▶│  1. Parse OPML               │  │
+│  │  Popover         │         │  2. Fetch RSS (20 threads)   │  │
+│  │  Settings        │  JSON   │  3. Build prompt + profile   │  │
+│  │  Scheduler       │◀────────│  4. claude -p < digest.md    │  │
+│  │  Notifications   │  stdout │  5. Render DOCX              │  │
+│  └──────────────────┘         └──────────────────────────────┘  │
+│                                                                 │
+│  Application Support/Specola/                                   │
+│  ├── engine/.venv/    (auto-created on first launch)            │
+│  ├── Feeds.opml       (copy of user's OPML)                    │
+│  ├── profile.md       (user's professional profile)             │
+│  └── history.json     (last 30 briefings metadata)              │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-Native SwiftUI menubar app. Handles scheduling (60-second timer + wake-from-sleep detection), user settings, history tracking, and macOS notifications. No external Swift packages.
+### Why Two Languages?
 
-### Python Engine (the brain)
+| Concern | Best tool | Why |
+|---------|-----------|-----|
+| RSS parsing | Python (`feedparser`) | Mature, handles every RSS/Atom edge case |
+| Concurrent fetching | Python (`ThreadPoolExecutor`) | Simple, effective for I/O-bound work |
+| DOCX generation | Python (`python-docx`) | Only viable library for styled DOCX |
+| Claude CLI invocation | Python (`subprocess`) | Natural fit — pipe stdin, read stdout |
+| macOS menubar UI | Swift (SwiftUI `MenuBarExtra`) | Native, lightweight, no dock icon |
+| Scheduling & wake detection | Swift (`Timer` + `NSWorkspace`) | Proper OS integration |
+| Notifications | Swift (`UNUserNotificationCenter`) | Native macOS notifications |
+| App lifecycle | Swift | Login items, sandboxing, bundle management |
 
-Standalone CLI that does the heavy lifting:
+### Interface Contract
 
-| Module | Role |
-|--------|------|
-| `feed_fetcher.py` | OPML parsing + concurrent RSS fetch (20 threads) |
-| `prompt_builder.py` | Assembles the analysis prompt (IT/EN) |
-| `analyzer.py` | Invokes `claude -p` via subprocess |
-| `doc_generator.py` | Renders markdown to DOCX with python-docx |
+```
+Swift → Python:  Process() with CLI arguments
+                 --opml, --profile, --output-dir, --hours, --language
+
+Python → Swift:  JSON on stdout
+                 {"status": "ok", "output_path": "...", "feed_count": N, "item_count": N}
+                 {"status": "error", "message": "..."}
+```
+
+### Python Engine Modules
+
+| Module | Responsibility | Key details |
+|--------|---------------|-------------|
+| `feed_fetcher.py` | OPML parsing + RSS fetch | `xml.etree.ElementTree` for OPML, `feedparser` for RSS, `ThreadPoolExecutor` with 20 workers, strips HTML, filters by time window, handles timezone-aware dates |
+| `prompt_builder.py` | Prompt assembly | Three-part prompt: system instruction + user profile (verbatim) + output instructions. Hardcoded IT/EN templates. Appends category list. |
+| `analyzer.py` | Claude CLI invocation | `subprocess.run(["claude", "-p", prompt], stdin=digest)`. No retry, no backoff. 300s timeout. Returns None on failure. |
+| `doc_generator.py` | DOCX rendering | Line-by-line markdown parsing with regex. Heading styles, bold runs, hyperlinks, horizontal rules. A4/Calibri/1.3 line height. Branded header/footer. Fallback mode for when Claude is unavailable. |
+
+### Swift App Components
+
+| File | Role |
+|------|------|
+| `SpecolaApp.swift` | `@main` entry, `MenuBarExtra` with dynamic badge icon, `Settings` scene, first-launch flow, engine setup |
+| `MenuBarView.swift` | Popover: header with last generation time, scrollable history list (10 items), "Genera ora" with progress state, settings/quit footer |
+| `SettingsView.swift` | `TabView` with 4 tabs: Fonti (OPML picker), Pianificazione (time picker, auto-generate, login item), Profilo (multiline text editor), Avanzate (output dir, language, time window, Claude path) |
+| `Models/AppState.swift` | `@Observable` class: history array, generation state, unread count, JSON persistence, max 30 entries |
+| `Models/Settings.swift` | `SpecolaSettings` enum wrapping `UserDefaults` + computed paths for Application Support |
+| `Models/SpecolaEntry.swift` | `Codable` struct: id, date, path, feedCount, itemCount, read |
+| `Services/EngineService.swift` | Async `Process()` launch, stdout JSON parsing, typed errors |
+| `Services/SchedulerService.swift` | 60-second `Timer` + `NSWorkspace.didWakeNotification`. Pure `shouldGenerate()` function for testability |
+| `Services/NotificationService.swift` | `UNUserNotificationCenter` — permission request, success/error notifications |
+| `Helpers/MenuBarIcon.swift` | Renders `binoculars` SF Symbol + red badge overlay as `NSImage` |
+
+---
+
+## Configuration
+
+### Settings Window
+
+| Tab | Controls |
+|-----|----------|
+| **Fonti** | OPML file picker (`.opml`, `.xml`), feed count summary, remove button. File is copied to Application Support. |
+| **Pianificazione** | Hour/minute picker (default: 07:00), "Genera automaticamente" toggle, "Avvia al login" toggle (via `SMAppService`) |
+| **Profilo** | Multiline text editor (min 200pt height). Auto-saves on focus loss. No character limit. |
+| **Avanzate** | Output directory (default: `~/Documents/Specola/`), language picker (IT/EN), time window stepper (6-72 hours, default 24), Claude CLI path override |
+
+### Data Storage
+
+| Data | Location | Format |
+|------|----------|--------|
+| App settings | `UserDefaults` (com.oltrematica.specola) | Key-value |
+| User profile | `~/Library/Application Support/Specola/profile.md` | Plain text |
+| OPML feeds | `~/Library/Application Support/Specola/Feeds.opml` | XML |
+| Briefing history | `~/Library/Application Support/Specola/history.json` | JSON array (max 30 entries) |
+| Python engine | `~/Library/Application Support/Specola/engine/` | Python venv + source |
+| Generated briefings | `~/Documents/Specola/Specola_YYYY-MM-DD.docx` | DOCX |
+
+---
+
+## Engine CLI Reference
+
+The Python engine can be used standalone, independent of the Swift app:
 
 ```bash
-# You can run the engine standalone
 cd engine
 .venv/bin/python specola_engine.py run \
     --opml ~/feeds.opml \
     --profile ~/profile.md \
     --output-dir ~/Documents/Specola \
-    --language it
+    --language it \
+    --hours 24
 ```
 
-### Interface Contract
-
-```
-Swift → Python:  CLI arguments (--opml, --profile, --output-dir, --hours, --language)
-Python → Swift:  JSON on stdout {"status": "ok", "output_path": "...", "feed_count": N, "item_count": N}
-```
-
-## Configuration
-
-### Settings Tabs
-
-| Tab | What it does |
-|-----|-------------|
-| **Fonti** | Import/remove OPML file, see feed count |
-| **Pianificazione** | Set daily generation time, auto-generate toggle, launch at login |
-| **Profilo** | Free-text description of your role, interests, and projects |
-| **Avanzate** | Output directory, language (IT/EN), time window (6-72h), Claude CLI path |
-
-### Data Storage
-
-| What | Where |
-|------|-------|
-| Settings | `UserDefaults` (com.oltrematica.specola) |
-| Profile | `~/Library/Application Support/Specola/profile.md` |
-| OPML copy | `~/Library/Application Support/Specola/Feeds.opml` |
-| History | `~/Library/Application Support/Specola/history.json` |
-| Briefings | `~/Documents/Specola/Specola_YYYY-MM-DD.docx` |
-
-## Engine CLI Reference
+### All Options
 
 ```
 specola_engine.py run [options]
 
---opml PATH           OPML file path (required)
---profile PATH        User profile file (required)
---output-dir PATH     DOCX output directory (required)
---hours N             Time window in hours (default: 24)
---language it|en      Briefing language (default: it)
---max-items N         Max items per category (default: 30)
---model MODEL         Claude model override
---dry-run             Fetch only — no Claude, no DOCX
---verbose             DEBUG logging to stderr
+Required:
+  --opml PATH           OPML file with RSS feed URLs
+  --profile PATH        Plain text file describing the user's professional profile
+  --output-dir PATH     Directory where DOCX files are saved
+
+Optional:
+  --hours N             Only include articles from the last N hours (default: 24)
+  --language it|en      Briefing language (default: it)
+  --max-items N         Maximum items per feed category (default: 30)
+  --model MODEL         Override the Claude model used for analysis
+  --dry-run             Fetch feeds and report counts, but skip Claude analysis and DOCX generation
+  --verbose             Enable DEBUG logging to stderr
 ```
+
+### Output Format
+
+Stdout (always JSON):
+
+```json
+// Success
+{"status": "ok", "output_path": "/path/to/Specola_2026-04-05.docx", "feed_count": 187, "item_count": 42}
+
+// Dry run
+{"status": "ok", "feed_count": 187, "item_count": 42}
+
+// Error
+{"status": "error", "message": "Nessun feed trovato nel file OPML"}
+```
+
+Stderr: logging (WARNING by default, DEBUG with `--verbose`).
+
+### Fallback Behavior
+
+If Claude CLI fails (not found, timeout, error), the engine **still generates a DOCX** from the raw feed digest with a red warning banner: "Analisi non disponibile." This ensures you always get *something*, even if the AI analysis is temporarily unavailable.
+
+---
 
 ## Development
 
+### Running Tests
+
 ```bash
-# Python engine tests (44 tests)
+# Python engine — 46 tests
 cd engine
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m pytest tests/ -v
 
-# Swift tests (15 tests)
+# Swift app — 15 tests
 xcodebuild -project Specola.xcodeproj -scheme SpecolaTests \
     -destination 'platform=macOS' test
-
-# Regenerate Xcode project after adding files
-xcodegen generate
 ```
+
+### Build from Source
+
+```bash
+# Regenerate Xcode project (after modifying project.yml or adding files)
+xcodegen generate
+
+# Debug build
+xcodebuild -project Specola.xcodeproj -scheme Specola build
+
+# Release build → /Applications
+xcodebuild -project Specola.xcodeproj -scheme Specola \
+    -configuration Release -derivedDataPath build
+cp -R build/Build/Products/Release/Specola.app /Applications/
+```
+
+### Regenerating the App Icon
+
+The app icon is generated programmatically from the `binoculars.fill` SF Symbol:
+
+```bash
+swift scripts/generate_icon.swift Specola/Assets.xcassets/AppIcon.appiconset
+```
+
+This renders the icon at all 10 required macOS sizes (16px to 1024px) with the Specola brand colors: navy gradient background, white binoculars, red accent bar.
 
 ### Project Structure
 
 ```
 specola/
-├── Specola/                    # Swift app source
-│   ├── SpecolaApp.swift        # @main entry, MenuBarExtra
-│   ├── MenuBarView.swift       # Popover UI
-│   ├── SettingsView.swift      # Four-tab settings
-│   ├── Models/                 # SpecolaEntry, AppState, Settings
-│   ├── Services/               # Engine, Scheduler, Notifications
-│   └── Helpers/                # MenuBarIcon badge rendering
-├── SpecolaTests/               # Swift unit tests
-├── engine/                     # Python engine
-│   ├── specola_engine.py       # CLI entry point
-│   ├── src/                    # Core modules
-│   └── tests/                  # pytest suite
-├── project.yml                 # xcodegen spec
-└── CLAUDE.md                   # AI assistant instructions
+├── Specola/                        # Swift app source
+│   ├── SpecolaApp.swift            # @main, MenuBarExtra, first launch
+│   ├── MenuBarView.swift           # Popover UI
+│   ├── SettingsView.swift          # Four-tab settings (TabView)
+│   ├── Models/
+│   │   ├── SpecolaEntry.swift      # History entry (Codable)
+│   │   ├── AppState.swift          # @Observable app state
+│   │   └── Settings.swift          # UserDefaults wrapper
+│   ├── Services/
+│   │   ├── EngineService.swift     # Python engine launcher
+│   │   ├── SchedulerService.swift  # Timer + wake detection
+│   │   └── NotificationService.swift
+│   ├── Helpers/
+│   │   └── MenuBarIcon.swift       # Badge icon renderer
+│   └── Assets.xcassets/
+│       └── AppIcon.appiconset/     # Generated icon (10 sizes)
+├── SpecolaTests/                   # Swift unit tests
+│   ├── SpecolaEntryTests.swift     # JSON encode/decode
+│   ├── AppStateTests.swift         # History, unread count, max entries
+│   ├── EngineServiceTests.swift    # JSON output parsing
+│   └── SchedulerServiceTests.swift # Scheduling logic
+├── engine/                         # Python engine (bundled in .app)
+│   ├── specola_engine.py           # CLI entry point + orchestration
+│   ├── requirements.txt            # feedparser, python-docx, python-dateutil
+│   ├── requirements-dev.txt        # + pytest
+│   ├── setup_engine.sh             # venv creation script
+│   ├── src/
+│   │   ├── feed_fetcher.py         # OPML + RSS + digest
+│   │   ├── prompt_builder.py       # IT/EN prompt templates
+│   │   ├── analyzer.py             # Claude CLI subprocess
+│   │   └── doc_generator.py        # DOCX renderer
+│   └── tests/                      # 46 pytest tests
+├── scripts/
+│   └── generate_icon.swift         # App icon generator
+├── project.yml                     # xcodegen project definition
+├── CLAUDE.md                       # AI assistant instructions
+├── LICENSE                         # MIT
+└── README.md
 ```
-
-## Design Decisions
-
-- **No API keys** — Uses Claude Code CLI (`claude -p`), not the Anthropic API
-- **No Electron** — Native Swift/SwiftUI for a real Mac experience
-- **No async Python** — ThreadPoolExecutor is simpler and sufficient for I/O-bound RSS fetching
-- **No Core Data** — A JSON file handles 30 history entries just fine
-- **No launchd** — Internal timer + wake detection keeps scheduling self-contained
-- **DOCX, not PDF** — Editable, searchable, easy to share and annotate
-
-## License
-
-See [LICENSE](LICENSE).
 
 ---
 
-*Built with Swift, Python, and Claude Code.*
+## Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| **Claude Code CLI, not API** | No API keys to manage, no billing to set up. If you have Claude Code, Specola works. |
+| **Native Swift, not Electron** | A menubar app should be invisible when you don't need it. ~15 MB, not ~200 MB. |
+| **Python for the engine** | `feedparser` handles every RSS/Atom edge case. `python-docx` is the only viable DOCX library. Both are battle-tested. |
+| **Two processes, not one** | Clean separation. The engine is testable standalone. The app is pure UI. Neither depends on the other's internals. |
+| **DOCX, not PDF** | Editable, searchable, annotatable. Opens everywhere. You can paste sections into emails or docs. |
+| **No async Python** | `ThreadPoolExecutor` is simpler and perfectly adequate for I/O-bound RSS fetching. No event loop complexity. |
+| **No Core Data** | 30 JSON entries don't need a database. `Codable` + file I/O is simpler and more debuggable. |
+| **No launchd** | An internal timer + wake-from-sleep observer keeps scheduling self-contained. No system-level configuration to manage. |
+| **Bundled engine** | The Python engine ships inside the `.app` bundle. On first launch it's copied to Application Support and the venv is created automatically. Zero manual setup. |
+| **Links in every item** | Every cited news item includes a clickable hyperlink to the original source. The briefing is a starting point for deeper reading, not a replacement. |
+
+---
+
+## Troubleshooting
+
+### "Genera ora" is disabled
+You need to import an OPML file first. Open Settings (click the menubar icon, then "Impostazioni..."), go to the "Fonti" tab, and select your OPML file.
+
+### Claude CLI not found
+Specola looks for `claude` in `/usr/local/bin/`, `~/.local/bin/`, `~/.claude/local/`, and the system PATH. If it's installed elsewhere, set the path manually in Settings > Avanzate.
+
+### Engine setup fails on first launch
+You can set up the engine manually:
+```bash
+cd ~/Library/Application\ Support/Specola/engine/
+bash setup_engine.sh
+```
+
+### Briefing shows "Analisi non disponibile"
+Claude CLI failed or timed out. The DOCX still contains the raw feed digest. Check that `claude` works in your terminal: `echo "test" | claude -p "say hi"`.
+
+### No notification after generation
+Go to System Settings > Notifications > Specola and enable notifications.
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
+
+---
+
+*Built with Swift, Python, and [Claude Code](https://claude.ai/claude-code).*
