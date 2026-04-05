@@ -4,6 +4,8 @@ import SwiftUI
 struct SpecolaApp: App {
     @State private var appState: AppState
     @State private var scheduler: SchedulerService
+    @State private var animationFrame: Int = 0
+    @State private var animationTimer: Timer?
 
     var body: some Scene {
         MenuBarExtra {
@@ -11,9 +13,20 @@ struct SpecolaApp: App {
                 .environment(appState)
                 .modifier(FirstLaunchModifier())
         } label: {
-            Image(nsImage: MenuBarIcon.image(badgeCount: appState.unreadCount))
+            if appState.isGenerating {
+                Image(nsImage: MenuBarIcon.generatingImage(frame: animationFrame))
+            } else {
+                Image(nsImage: MenuBarIcon.image(badgeCount: appState.unreadCount))
+            }
         }
         .menuBarExtraStyle(.window)
+        .onChange(of: appState.isGenerating) { _, isGenerating in
+            if isGenerating {
+                startIconAnimation()
+            } else {
+                stopIconAnimation()
+            }
+        }
 
         Settings {
             SettingsView()
@@ -22,7 +35,8 @@ struct SpecolaApp: App {
     }
 
     init() {
-        NotificationService.requestPermission()
+        // Setup notifications with delegate for foreground display
+        NotificationService.setup()
 
         let state = AppState()
         state.loadHistory()
@@ -39,8 +53,23 @@ struct SpecolaApp: App {
             triggerGeneration(appState: state)
         }
         _scheduler = State(initialValue: schedulerInstance)
+    }
 
-        // First launch is handled by FirstLaunchModifier in the view
+    private func startIconAnimation() {
+        animationTimer?.invalidate()
+        animationFrame = 0
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { _ in
+            Task { @MainActor [self] in
+                self.animationFrame = (self.animationFrame + 1) % 3
+            }
+        }
+        animationTimer = timer
+    }
+
+    private func stopIconAnimation() {
+        animationTimer?.invalidate()
+        animationTimer = nil
+        animationFrame = 0
     }
 }
 

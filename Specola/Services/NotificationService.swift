@@ -1,9 +1,40 @@
-import Foundation
+import AppKit
 import UserNotifications
 
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationDelegate()
+
+    /// Show banner even when app is in foreground (menubar apps are always "foreground")
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
+
+    /// Handle "Apri" action — open the DOCX file
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        if let path = response.notification.request.content.userInfo["docxPath"] as? String {
+            NSWorkspace.shared.open(URL(fileURLWithPath: path))
+        }
+        completionHandler()
+    }
+}
+
 enum NotificationService {
-    static func requestPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    static func setup() {
+        let center = UNUserNotificationCenter.current()
+        center.delegate = NotificationDelegate.shared
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if let error {
+                print("Notification permission error: \(error)")
+            }
+        }
     }
 
     static func notifySuccess(date: String, itemCount: Int, docxPath: String) {
