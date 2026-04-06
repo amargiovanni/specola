@@ -272,6 +272,17 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					27E273402375698A851E1D5C = {
+						ProvisioningStyle = Manual;
+					};
+					53C1FF9BA87DDDF7F3095568 = {
+						ProvisioningStyle = Manual;
+					};
+					EB9CFF7BC7AF48C9260AAC52 = {
+						ProvisioningStyle = Manual;
+					};
+				};
 			};
 			buildConfigurationList = 6B36EF2AAD0B8107999B8CEC /* Build configuration list for PBXProject "Specola" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -322,7 +333,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Bundle Python engine into app Resources\nENGINE_SRC=\"${PROJECT_DIR}/engine\"\nENGINE_DST=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/Resources/engine\"\nrm -rf \"$ENGINE_DST\"\nmkdir -p \"$ENGINE_DST/src\"\ncp \"$ENGINE_SRC/specola_engine.py\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/requirements.txt\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/setup_engine.sh\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/src/__init__.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/feed_fetcher.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/prompt_builder.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/analyzer.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/doc_generator.py\" \"$ENGINE_DST/src/\"\nchmod +x \"$ENGINE_DST/setup_engine.sh\"\n";
+			shellScript = "# Bundle Python engine into app Resources\nENGINE_SRC=\"${PROJECT_DIR}/engine\"\nENGINE_DST=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/Resources/engine\"\nrm -rf \"$ENGINE_DST\"\nmkdir -p \"$ENGINE_DST/src\"\ncp \"$ENGINE_SRC/specola_engine.py\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/requirements.txt\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/setup_engine.sh\" \"$ENGINE_DST/\"\ncp \"$ENGINE_SRC/src/__init__.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/feed_fetcher.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/prompt_builder.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/analyzer.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/doc_generator.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/html_generator.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/pdf_generator.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/epub_generator.py\" \"$ENGINE_DST/src/\"\ncp \"$ENGINE_SRC/src/portal_generator.py\" \"$ENGINE_DST/src/\"\nchmod +x \"$ENGINE_DST/setup_engine.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -468,6 +479,10 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -577,6 +592,10 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
