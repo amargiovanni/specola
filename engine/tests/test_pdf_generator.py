@@ -29,3 +29,20 @@ class TestGeneratePdf:
         out_dir = tmp_path / "new" / "out"
         pdf_path = generate_pdf(html_path, "2026-04-05", out_dir)
         assert Path(pdf_path).exists()
+
+    def test_returns_string_path(self, tmp_output_dir):
+        html_path = generate_html("# T", "2026-04-05", tmp_output_dir)
+        pdf_path = generate_pdf(html_path, "2026-04-05", tmp_output_dir)
+        assert isinstance(pdf_path, str)
+
+    def test_complex_html_generates_pdf(self, tmp_output_dir):
+        md = "# Title\n\n## Section\n\n- **Bold** item\n- [Link](https://x.com)\n\n---\n\n1. First\n2. Second"
+        html_path = generate_html(md, "2026-04-05", tmp_output_dir)
+        pdf_path = generate_pdf(html_path, "2026-04-05", tmp_output_dir)
+        assert Path(pdf_path).exists()
+        assert Path(pdf_path).stat().st_size > 100
+
+    def test_date_with_timestamp(self, tmp_output_dir):
+        html_path = generate_html("# T", "2026-04-05_1930", tmp_output_dir)
+        pdf_path = generate_pdf(html_path, "2026-04-05_1930", tmp_output_dir)
+        assert "Specola_2026-04-05_1930.pdf" in pdf_path

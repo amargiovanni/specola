@@ -2,10 +2,11 @@ import json
 import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock, call
+from io import StringIO
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from specola_engine import run_engine
+from specola_engine import run_engine, _output_json, _analyze_categories, _synthesize, _assemble_briefing
 
 
 class TestRunEngine:
@@ -134,3 +135,364 @@ class TestRunEngine:
         result = json.loads(captured.out)
         assert result["status"] == "ok"
         mock_fallback.assert_called_once()
+
+
+class TestOutputJson:
+    def test_prints_json(self, capsys):
+        _output_json({"status": "ok", "count": 5})
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["status"] == "ok"
+        assert data["count"] == 5
+
+    def test_unicode_preserved(self, capsys):
+        _output_json({"message": "Ciao àèìòù"})
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["message"] == "Ciao àèìòù"
+
+
+class TestAnalyzeCategories:
+    @patch("specola_engine.analyze_with_claude")
+    def test_all_succeed(self, mock_claude, tmp_path):
+        mock_claude.return_value = "  Analysis result  "
+        items = {
+            "Tech": [{"title": "Art", "source": "F", "summary": "S", "link": "", "published": ""}],
+        }
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        results, count = _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", None)
+        assert count == 1
+        assert "Tech" in results
+        assert results["Tech"] == "Analysis result"
+
+    @patch("specola_engine.analyze_with_claude", return_value=None)
+    def test_failure_uses_raw_items(self, mock_claude, tmp_path):
+        items = {
+            "Tech": [{"title": "Art", "source": "Feed", "summary": "Sum", "link": "", "published": ""}],
+        }
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        results, count = _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", None)
+        assert count == 0
+        assert "Art" in results["Tech"]
+        assert "Feed" in results["Tech"]
+
+    @patch("specola_engine.analyze_with_claude")
+    def test_mixed_success_failure(self, mock_claude, tmp_path):
+        mock_claude.side_effect = ["  Analysis  ", None]
+        items = {
+            "Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}],
+            "Biz": [{"title": "B", "source": "G", "summary": "S", "link": "", "published": ""}],
+        }
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        results, count = _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", None)
+        assert count == 1  # Only Tech succeeded
+        assert len(results) == 2
+
+    @patch("specola_engine.analyze_with_claude")
+    def test_writes_digest_files(self, mock_claude, tmp_path):
+        mock_claude.return_value = "result"
+        items = {
+            "Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}],
+        }
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", None)
+        digest_files = list(work_dir.glob("cat_*.md"))
+        assert len(digest_files) == 1
+
+    @patch("specola_engine.analyze_with_claude")
+    def test_passes_model(self, mock_claude, tmp_path):
+        mock_claude.return_value = "result"
+        items = {"Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}]}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", "opus")
+        _, kwargs = mock_claude.call_args
+        assert kwargs["model"] == "opus"
+
+
+class TestSynthesize:
+    @patch("specola_engine.analyze_with_claude")
+    def test_success(self, mock_claude, tmp_path):
+        mock_claude.return_value = "## Da sapere oggi\n- Point 1"
+        analyses = {"Tech": "tech analysis", "Biz": "biz analysis"}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        result = _synthesize(analyses, "profile", "it", "2026-04-05", work_dir, "2026-04-05", None)
+        assert "Da sapere oggi" in result
+
+    @patch("specola_engine.analyze_with_claude", return_value=None)
+    def test_failure_returns_none(self, mock_claude, tmp_path):
+        analyses = {"Tech": "analysis"}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        result = _synthesize(analyses, "profile", "it", "2026-04-05", work_dir, "2026-04-05", None)
+        assert result is None
+
+    @patch("specola_engine.analyze_with_claude")
+    def test_writes_analyses_file(self, mock_claude, tmp_path):
+        mock_claude.return_value = "result"
+        analyses = {"Tech": "tech stuff", "Biz": "biz stuff"}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _synthesize(analyses, "profile", "it", "2026-04-05", work_dir, "2026-04-05", None)
+        files = list(work_dir.glob("all_analyses_*.md"))
+        assert len(files) == 1
+        content = files[0].read_text()
+        assert "## Tech" in content
+        assert "## Biz" in content
+
+
+class TestAssembleBriefing:
+    def test_with_synthesis(self):
+        synthesis = "## Da sapere oggi\n- Point 1"
+        analyses = {"Tech": "tech analysis"}
+        result = _assemble_briefing(synthesis, analyses, "2026-04-05")
+        assert "Specola — Briefing del 2026-04-05" in result
+        assert "Da sapere oggi" in result
+        assert "---" in result
+        assert "## Tech" in result
+        assert "tech analysis" in result
+
+    def test_without_synthesis(self):
+        analyses = {"Tech": "tech analysis", "Biz": "biz analysis"}
+        result = _assemble_briefing(None, analyses, "2026-04-05")
+        assert "Specola — Briefing del 2026-04-05" in result
+        assert "---" not in result
+        assert "## Tech" in result
+        assert "## Biz" in result
+
+    def test_empty_analyses(self):
+        result = _assemble_briefing(None, {}, "2026-04-05")
+        assert "Specola" in result
+
+    def test_synthesis_stripped(self):
+        synthesis = "  \n## Da sapere oggi\n- Point\n  "
+        result = _assemble_briefing(synthesis, {}, "2026-04-05")
+        assert "## Da sapere oggi" in result
+
+
+class TestRunEngineFormats:
+    """Test different output formats."""
+
+    @patch("specola_engine.generate_epub")
+    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_epub_format(self, mock_parse, mock_fetch, mock_analyze, mock_epub, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+        mock_epub.return_value = str(output_dir / "Specola_2026-04-05.epub")
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False,
+                   output_format="epub")
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["status"] == "ok"
+        mock_epub.assert_called_once()
+
+    @patch("specola_engine.generate_pdf")
+    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_pdf_format(self, mock_parse, mock_fetch, mock_analyze, mock_pdf, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+        mock_pdf.return_value = str(output_dir / "Specola_2026-04-05.pdf")
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False,
+                   output_format="pdf")
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["status"] == "ok"
+        mock_pdf.assert_called_once()
+
+    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_html_format(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        """html format uses html_path as main_path."""
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False,
+                   output_format="html")
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["status"] == "ok"
+        assert result["output_path"].endswith(".html")
+
+
+class TestRunEngineErrors:
+    def test_opml_parse_error(self, tmp_path, capsys):
+        """Invalid OPML produces error JSON."""
+        opml = tmp_path / "bad.opml"
+        opml.write_text("not xml")
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(tmp_path),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["status"] == "error"
+        assert "OPML" in result["message"]
+
+    @patch("specola_engine.parse_opml", return_value={})
+    def test_empty_opml(self, mock_parse, tmp_path, capsys):
+        """Empty OPML (no feeds) produces error JSON."""
+        run_engine(opml="x", profile="x", output_dir=str(tmp_path),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["status"] == "error"
+        assert "Nessun feed" in result["message"]
+
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_zero_items(self, mock_parse, mock_fetch, tmp_path, capsys):
+        """No items in time window produces error JSON."""
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": []}
+
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+
+        run_engine(opml="x", profile=str(profile), output_dir=str(tmp_path),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["status"] == "error"
+        assert "Nessun articolo" in result["message"]
+
+    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_verbose_mode(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        """Verbose mode doesn't crash (logging set to DEBUG)."""
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=True)
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["status"] == "ok"
+
+    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_output_includes_highlights(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        """Output JSON includes highlights array."""
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.side_effect = [
+            "analysis text",
+            "## Da sapere oggi\n- Highlight one\n- Highlight two",
+        ]
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert "highlights" in result
+        assert isinstance(result["highlights"], list)
+
+    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_output_includes_html_path(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        """Output JSON includes html_path."""
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert "html_path" in result
+        assert result["html_path"].endswith(".html")
+
+    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_output_includes_portal_path(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert "portal_path" in result
