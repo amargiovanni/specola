@@ -129,8 +129,10 @@ private func triggerGeneration(appState: AppState) {
                 id: dateId,
                 date: Date(),
                 path: result.outputPath ?? "",
+                htmlPath: result.htmlPath ?? "",
                 feedCount: result.feedCount,
                 itemCount: result.itemCount,
+                highlights: result.highlights,
                 read: false
             )
 

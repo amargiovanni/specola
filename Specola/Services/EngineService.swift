@@ -2,8 +2,10 @@ import Foundation
 
 struct EngineResult {
     let outputPath: String?
+    let htmlPath: String?
     let feedCount: Int
     let itemCount: Int
+    let highlights: [String]
 }
 
 enum EngineError: LocalizedError {
@@ -42,6 +44,7 @@ enum EngineService {
             "--output-dir", SpecolaSettings.outputDir,
             "--hours", String(SpecolaSettings.hours),
             "--language", SpecolaSettings.language,
+            "--format", SpecolaSettings.outputFormat,
         ]
         process.currentDirectoryURL = engineDir
 
@@ -55,6 +58,10 @@ enum EngineService {
         ]
         let currentPath = env["PATH"] ?? "/usr/bin:/bin"
         env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
+        // WeasyPrint needs Homebrew's GLib/Pango/Cairo
+        if env["DYLD_FALLBACK_LIBRARY_PATH"] == nil {
+            env["DYLD_FALLBACK_LIBRARY_PATH"] = "/opt/homebrew/lib"
+        }
         process.environment = env
 
         let outputPipe = Pipe()
@@ -94,8 +101,10 @@ enum EngineService {
         }
         return EngineResult(
             outputPath: parsed["output_path"] as? String,
+            htmlPath: parsed["html_path"] as? String,
             feedCount: parsed["feed_count"] as? Int ?? 0,
-            itemCount: parsed["item_count"] as? Int ?? 0
+            itemCount: parsed["item_count"] as? Int ?? 0,
+            highlights: parsed["highlights"] as? [String] ?? []
         )
     }
 }

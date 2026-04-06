@@ -179,11 +179,12 @@ private struct AdvancedTab: View {
     @State private var language = SpecolaSettings.language
     @State private var hours = SpecolaSettings.hours
     @State private var claudePath = SpecolaSettings.claudePath
+    @State private var outputFormat = SpecolaSettings.outputFormat
 
     var body: some View {
         Form {
             Section("Output") {
-                LabeledContent("Directory DOCX") {
+                LabeledContent("Directory output") {
                     HStack {
                         Text(outputDir)
                             .lineLimit(1)
@@ -198,6 +199,14 @@ private struct AdvancedTab: View {
                 }
             }
             Section("Briefing") {
+                Picker("Formato di output", selection: $outputFormat) {
+                    Text("DOCX").tag("docx")
+                    Text("PDF").tag("pdf")
+                    Text("EPUB").tag("epub")
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: outputFormat) { _, val in SpecolaSettings.outputFormat = val }
+
                 Picker("Lingua", selection: $language) {
                     Text("Italiano").tag("it")
                     Text("English").tag("en")

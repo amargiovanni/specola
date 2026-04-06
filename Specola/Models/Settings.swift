@@ -13,6 +13,7 @@ enum SpecolaSettings {
         static let claudePath = "claudePath"
         static let launchAtLogin = "launchAtLogin"
         static let hasCompletedSetup = "hasCompletedSetup"
+        static let outputFormat = "outputFormat"
     }
 
     static var scheduleHour: Int {
@@ -64,6 +65,11 @@ enum SpecolaSettings {
     static var hasCompletedSetup: Bool {
         get { defaults.bool(forKey: Key.hasCompletedSetup) }
         set { defaults.set(newValue, forKey: Key.hasCompletedSetup) }
+    }
+
+    static var outputFormat: String {
+        get { defaults.string(forKey: Key.outputFormat) ?? "docx" }
+        set { defaults.set(newValue, forKey: Key.outputFormat) }
     }
 
     static var supportDir: URL {
