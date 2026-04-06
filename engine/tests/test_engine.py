@@ -41,7 +41,7 @@ class TestRunEngine:
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_two_phase_analysis(self, mock_parse, mock_fetch, mock_analyze, mock_docx, tmp_path, capsys):
-        """Phase 1 analyzes each category, Phase 2 synthesizes."""
+        """Phase 1 analyzes categories (small ones batched), Phase 2 synthesizes."""
         opml = tmp_path / "test.opml"
         opml.write_text('<opml version="2.0"><head/><body/></opml>')
         profile = tmp_path / "profile.md"
@@ -58,11 +58,11 @@ class TestRunEngine:
             "Biz": [{"title": "Art2", "link": "https://y.com", "published": "2026-04-05 08:00", "summary": "S2", "source": "Feed2"}],
         }
 
-        # Claude returns analysis for each category call + synthesis call
+        # Both categories are small (<5 items), so they get batched into 1 call
+        # Phase 1: 1 batched call + Phase 2: 1 synthesis call = 2 total
         mock_analyze.side_effect = [
-            "**Art1** — analysis of tech article. [Feed](https://x.com)",   # Phase 1: Tech
-            "**Art2** — analysis of biz article. [Feed2](https://y.com)",   # Phase 1: Biz
-            "## Da sapere oggi\n- Point 1\n- Point 2",                      # Phase 2: Synthesis
+            "## Tech\n**Art1** — analysis. [Feed](https://x.com)\n\n## Biz\n**Art2** — analysis. [Feed2](https://y.com)",
+            "## Da sapere oggi\n- Point 1\n- Point 2",
         ]
         mock_docx.return_value = str(output_dir / "Specola_2026-04-05_0900.docx")
 
@@ -74,8 +74,8 @@ class TestRunEngine:
         assert result["status"] == "ok"
         assert "output_path" in result
 
-        # Claude called 3 times: 2 categories + 1 synthesis
-        assert mock_analyze.call_count == 3
+        # Claude called 2 times: 1 batched category call + 1 synthesis
+        assert mock_analyze.call_count == 2
         mock_docx.assert_called_once()
 
     @patch("specola_engine.generate_docx")
@@ -180,15 +180,18 @@ class TestAnalyzeCategories:
 
     @patch("specola_engine.analyze")
     def test_mixed_success_failure(self, mock_claude, tmp_path):
+        """With 2 small categories, they get batched. One large + one small tests mixed paths."""
+        # Make Tech large enough (>=5 items) to get its own call, Biz stays small
         mock_claude.side_effect = ["  Analysis  ", None]
+        tech_items = [{"title": f"A{i}", "source": "F", "summary": "S", "link": "", "published": ""} for i in range(6)]
         items = {
-            "Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}],
+            "Tech": tech_items,
             "Biz": [{"title": "B", "source": "G", "summary": "S", "link": "", "published": ""}],
         }
         work_dir = tmp_path / ".work"
         work_dir.mkdir()
         results, count = _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", None)
-        assert count == 1  # Only Tech succeeded
+        assert count == 1  # Only Tech (big) succeeded, Biz (batched small) failed
         assert len(results) == 2
 
     @patch("specola_engine.analyze")

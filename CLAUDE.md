@@ -228,9 +228,10 @@ engine/
 ├── src/
 │   ├── __init__.py
 │   ├── feed_fetcher.py     # Parsing OPML + fetch RSS concorrente
+│   ├── prefilter.py        # Pre-filtering locale: rilevanza, dedup, troncamento
 │   ├── analyzer.py         # Invocazione claude CLI via subprocess
 │   ├── doc_generator.py    # Generazione DOCX con python-docx
-│   └── prompt_builder.py   # Costruzione dinamica del prompt
+│   └── prompt_builder.py   # Costruzione dinamica del prompt (ottimizzato token)
 └── .work/                  # File intermedi (creata a runtime)
 ```
 
@@ -283,7 +284,7 @@ Se `claude` non è nel PATH: restituire errore JSON. Timeout: 300 secondi. Se fa
 - Data non determinabile: includere l'item
 - Summary: `entry.summary` → `entry.description` → `entry.content[0].value`
 - Strip HTML: regex `<[^>]+>`, `html.unescape()`, collassare whitespace
-- Truncare summary a 500 caratteri
+- Truncare summary a 500 caratteri (il pre-filter poi lo tronca a 200 per il LLM)
 - Max N item per categoria, ordinati per data decrescente
 
 #### FeedItem
@@ -293,46 +294,90 @@ Se `claude` non è nel PATH: restituire errore JSON. Timeout: 300 secondi. Se fa
     "title": str,
     "link": str,
     "published": str,       # "YYYY-MM-DD HH:MM" o "data n/d"
-    "summary": str,         # Plaintext, max 500 chars
+    "summary": str,         # Plaintext, max 500 chars (200 dopo pre-filter)
     "source": str,          # Nome del feed
 }
 ```
 
-### Prompt Builder
+### Pre-filter (prefilter.py) — Ottimizzazione token
 
-Assembla il prompt da tre parti:
+Prima di inviare qualsiasi dato al LLM, il pre-filter applica tre operazioni locali per ridurre il consumo di token del 60-75%:
 
-#### 1. Istruzione di sistema (fissa)
+#### 1. Keyword relevance scoring
+- Estrae keyword dal profilo utente (tokenizzazione, rimozione stopword IT/EN)
+- Calcola score di rilevanza per ogni item (Jaccard-like, titolo pesato 2x)
+- Rimuove item sotto soglia, mantenendo almeno 3 per categoria
+- Effetto: elimina 40-60% degli item irrilevanti
+
+#### 2. Deduplicazione cross-feed
+- Confronto Jaccard sui titoli normalizzati (soglia 0.6)
+- Tiene il primo occorrimento (per data)
+- Effetto: elimina 10-20% di duplicati
+
+#### 3. Troncamento summary
+- Tronca i summary a 200 caratteri (da 500) per il consumo LLM
+- Taglia all'ultimo spazio per non spezzare parole
+
+#### 4. Rimozione categorie vuote
+- Categorie con 0 item dopo il filtro vengono rimosse (nessuna chiamata LLM)
+
+### Batching categorie piccole
+
+Categorie con meno di 5 item vengono raggruppate in una singola chiamata LLM anziché una per categoria. Questo evita il costo fisso del prompt (profilo + istruzioni) ripetuto per ogni micro-categoria.
+
+### Formato digest compatto
+
+Il digest inviato al LLM usa un formato compatto (`compact=True`) che risparmia ~30% di token rispetto al formato markdown verbose:
 
 ```
-Sei Specola, un assistente che produce briefing giornalieri da fonti RSS.
-Analizza il digest in input, prioritizza le notizie in base al profilo
-dell'utente, e produci un briefing strutturato e approfondito.
+## Categoria
+- **Titolo** (Fonte) https://link
+  Summary breve troncato a 200 char
+```
+
+### Prompt Builder
+
+Assembla il prompt da tre parti, ottimizzate per concisione:
+
+#### 1. Istruzione di sistema (fissa, concisa)
+
+```
+Sei Specola, analista che produce briefing giornalieri da fonti RSS.
+Analizza il digest, prioritizza per il profilo utente, produci analisi
+strutturata. Per ogni notizia includi il link [testo](url).
+Spiega contesto, implicazioni e rilevanza per l'utente.
 ```
 
 #### 2. Profilo utente (da profile.md, iniettato così com'è)
 
 ```
-Profilo dell'utente:
----
+Profilo utente:
 {contenuto di profile.md}
----
 ```
 
-#### 3. Istruzioni di output
+#### 3. Istruzioni di output (compatte)
 
 Per italiano (`it`):
 ```
-Produci il briefing in markdown:
+Analizza le notizie della categoria "{category}".
 
-# Specola — Briefing del [data di oggi]
+Per ogni notizia: paragrafo di 3-4 frasi con implicazioni, trend e
+rilevanza per l'utente. Formato:
 
+**Titolo** — analisi. [Fonte](url)
+
+Regole: italiano, zero fuffa, ogni item ha link, ordine per rilevanza,
+ometti irrilevanti, non inventare.
+```
+
+Fase di sintesi — produce solo le sezioni trasversali:
+
+```
 ## Da sapere oggi
-3-5 punti. Le cose più importanti per il profilo dell'utente. Una riga ciascuno.
+5-7 punti trasversali. Per ciascuno: 2-3 frasi con contesto e [link](url).
 
 ## Richiede attenzione
-Sviluppi che richiedono azione o valutazione entro la settimana. Per ciascuno:
-cosa è successo, perché conta per l'utente, cosa fare. Se non c'è nulla, ometti.
+Sviluppi che richiedono azione entro la settimana. 3-5 frasi: cosa, perché, cosa fare. Se non c'è nulla, ometti.
 
 ## Per area tematica
 Per ogni categoria del digest che contiene notizie rilevanti, crea una sezione
