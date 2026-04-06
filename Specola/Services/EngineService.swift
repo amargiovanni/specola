@@ -37,7 +37,7 @@ enum EngineService {
 
         let process = Process()
         process.executableURL = pythonPath
-        process.arguments = [
+        var args = [
             enginePath.path, "run",
             "--opml", SpecolaSettings.opmlPath.path,
             "--profile", SpecolaSettings.profilePath.path,
@@ -45,7 +45,24 @@ enum EngineService {
             "--hours", String(SpecolaSettings.hours),
             "--language", SpecolaSettings.language,
             "--format", SpecolaSettings.outputFormat,
+            "--provider", SpecolaSettings.llmProvider,
         ]
+
+        // Provider-specific arguments
+        let provider = SpecolaSettings.llmProvider
+        if provider == "openai" {
+            let apiKey = SpecolaSettings.openaiApiKey
+            if !apiKey.isEmpty { args += ["--api-key", apiKey] }
+            let model = SpecolaSettings.openaiModel
+            if !model.isEmpty { args += ["--model", model] }
+        } else if provider == "lmstudio" {
+            let endpoint = SpecolaSettings.lmstudioEndpoint
+            if !endpoint.isEmpty { args += ["--endpoint", endpoint] }
+            let model = SpecolaSettings.lmstudioModel
+            if !model.isEmpty { args += ["--model", model] }
+        }
+
+        process.arguments = args
         process.currentDirectoryURL = engineDir
 
         // Inherit user's PATH so the Python engine can find `claude` CLI

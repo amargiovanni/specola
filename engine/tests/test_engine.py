@@ -10,7 +10,7 @@ from specola_engine import run_engine, _output_json, _analyze_categories, _synth
 
 
 class TestRunEngine:
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_dry_run(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
@@ -37,7 +37,7 @@ class TestRunEngine:
         mock_analyze.assert_not_called()
 
     @patch("specola_engine.generate_docx")
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_two_phase_analysis(self, mock_parse, mock_fetch, mock_analyze, mock_docx, tmp_path, capsys):
@@ -79,7 +79,7 @@ class TestRunEngine:
         mock_docx.assert_called_once()
 
     @patch("specola_engine.generate_docx")
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_partial_category_failure(self, mock_parse, mock_fetch, mock_analyze, mock_docx, tmp_path, capsys):
@@ -110,7 +110,7 @@ class TestRunEngine:
         assert result["status"] == "ok"
 
     @patch("specola_engine.generate_fallback_docx")
-    @patch("specola_engine.analyze_with_claude", return_value=None)
+    @patch("specola_engine.analyze", return_value=None)
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_total_failure_generates_fallback(self, mock_parse, mock_fetch, mock_analyze, mock_fallback, tmp_path, capsys):
@@ -153,7 +153,7 @@ class TestOutputJson:
 
 
 class TestAnalyzeCategories:
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     def test_all_succeed(self, mock_claude, tmp_path):
         mock_claude.return_value = "  Analysis result  "
         items = {
@@ -166,7 +166,7 @@ class TestAnalyzeCategories:
         assert "Tech" in results
         assert results["Tech"] == "Analysis result"
 
-    @patch("specola_engine.analyze_with_claude", return_value=None)
+    @patch("specola_engine.analyze", return_value=None)
     def test_failure_uses_raw_items(self, mock_claude, tmp_path):
         items = {
             "Tech": [{"title": "Art", "source": "Feed", "summary": "Sum", "link": "", "published": ""}],
@@ -178,7 +178,7 @@ class TestAnalyzeCategories:
         assert "Art" in results["Tech"]
         assert "Feed" in results["Tech"]
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     def test_mixed_success_failure(self, mock_claude, tmp_path):
         mock_claude.side_effect = ["  Analysis  ", None]
         items = {
@@ -191,7 +191,7 @@ class TestAnalyzeCategories:
         assert count == 1  # Only Tech succeeded
         assert len(results) == 2
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     def test_writes_digest_files(self, mock_claude, tmp_path):
         mock_claude.return_value = "result"
         items = {
@@ -203,7 +203,7 @@ class TestAnalyzeCategories:
         digest_files = list(work_dir.glob("cat_*.md"))
         assert len(digest_files) == 1
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     def test_passes_model(self, mock_claude, tmp_path):
         mock_claude.return_value = "result"
         items = {"Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}]}
@@ -215,7 +215,7 @@ class TestAnalyzeCategories:
 
 
 class TestSynthesize:
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     def test_success(self, mock_claude, tmp_path):
         mock_claude.return_value = "## Da sapere oggi\n- Point 1"
         analyses = {"Tech": "tech analysis", "Biz": "biz analysis"}
@@ -224,7 +224,7 @@ class TestSynthesize:
         result = _synthesize(analyses, "profile", "it", "2026-04-05", work_dir, "2026-04-05", None)
         assert "Da sapere oggi" in result
 
-    @patch("specola_engine.analyze_with_claude", return_value=None)
+    @patch("specola_engine.analyze", return_value=None)
     def test_failure_returns_none(self, mock_claude, tmp_path):
         analyses = {"Tech": "analysis"}
         work_dir = tmp_path / ".work"
@@ -232,7 +232,7 @@ class TestSynthesize:
         result = _synthesize(analyses, "profile", "it", "2026-04-05", work_dir, "2026-04-05", None)
         assert result is None
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     def test_writes_analyses_file(self, mock_claude, tmp_path):
         mock_claude.return_value = "result"
         analyses = {"Tech": "tech stuff", "Biz": "biz stuff"}
@@ -279,7 +279,7 @@ class TestRunEngineFormats:
     """Test different output formats."""
 
     @patch("specola_engine.generate_epub")
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_epub_format(self, mock_parse, mock_fetch, mock_analyze, mock_epub, tmp_path, capsys):
@@ -305,7 +305,7 @@ class TestRunEngineFormats:
         mock_epub.assert_called_once()
 
     @patch("specola_engine.generate_pdf")
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_pdf_format(self, mock_parse, mock_fetch, mock_analyze, mock_pdf, tmp_path, capsys):
@@ -330,7 +330,7 @@ class TestRunEngineFormats:
         assert result["status"] == "ok"
         mock_pdf.assert_called_once()
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_html_format(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
@@ -401,7 +401,7 @@ class TestRunEngineErrors:
         assert result["status"] == "error"
         assert "Nessun articolo" in result["message"]
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_verbose_mode(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
@@ -424,7 +424,7 @@ class TestRunEngineErrors:
         result = json.loads(captured.out)
         assert result["status"] == "ok"
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_output_includes_highlights(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
@@ -451,7 +451,7 @@ class TestRunEngineErrors:
         assert "highlights" in result
         assert isinstance(result["highlights"], list)
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_output_includes_html_path(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
@@ -475,7 +475,7 @@ class TestRunEngineErrors:
         assert "html_path" in result
         assert result["html_path"].endswith(".html")
 
-    @patch("specola_engine.analyze_with_claude")
+    @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
     def test_output_includes_portal_path(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
@@ -496,3 +496,111 @@ class TestRunEngineErrors:
         captured = capsys.readouterr()
         result = json.loads(captured.out)
         assert "portal_path" in result
+
+
+class TestRunEngineProviders:
+    """Test that provider args are passed through the pipeline."""
+
+    @patch("specola_engine.analyze")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_openai_provider_passes_api_key(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model="gpt-4o", dry_run=False, verbose=False,
+                   provider="openai", api_key="sk-test-key", endpoint=None)
+
+        # analyze() should have been called with openai provider and api_key
+        for call in mock_analyze.call_args_list:
+            _, kwargs = call
+            assert kwargs["provider"] == "openai"
+            assert kwargs["api_key"] == "sk-test-key"
+
+    @patch("specola_engine.analyze")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_lmstudio_provider_passes_endpoint(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model="llama", dry_run=False, verbose=False,
+                   provider="lmstudio", endpoint="http://gpu:8080/v1/chat/completions")
+
+        for call in mock_analyze.call_args_list:
+            _, kwargs = call
+            assert kwargs["provider"] == "lmstudio"
+            assert kwargs["endpoint"] == "http://gpu:8080/v1/chat/completions"
+
+    @patch("specola_engine.analyze")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_claude_provider_default(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("profile")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {"Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]}
+        mock_analyze.return_value = "analysis"
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        for call in mock_analyze.call_args_list:
+            _, kwargs = call
+            assert kwargs["provider"] == "claude"
+
+
+class TestAnalyzeCategoriesProvider:
+    """Test _analyze_categories passes provider args through."""
+
+    @patch("specola_engine.analyze")
+    def test_passes_provider_and_key(self, mock_analyze, tmp_path):
+        mock_analyze.return_value = "result"
+        items = {"Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}]}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", None,
+                            provider="openai", api_key="sk-key", endpoint="https://custom.api")
+        _, kwargs = mock_analyze.call_args
+        assert kwargs["provider"] == "openai"
+        assert kwargs["api_key"] == "sk-key"
+        assert kwargs["endpoint"] == "https://custom.api"
+
+
+class TestSynthesizeProvider:
+    """Test _synthesize passes provider args through."""
+
+    @patch("specola_engine.analyze")
+    def test_passes_provider_and_endpoint(self, mock_analyze, tmp_path):
+        mock_analyze.return_value = "## Da sapere"
+        analyses = {"Tech": "analysis"}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _synthesize(analyses, "profile", "it", "2026-04-05", work_dir, "2026-04-05", None,
+                    provider="lmstudio", endpoint="http://local:1234/v1/chat/completions")
+        _, kwargs = mock_analyze.call_args
+        assert kwargs["provider"] == "lmstudio"
+        assert kwargs["endpoint"] == "http://local:1234/v1/chat/completions"

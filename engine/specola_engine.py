@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.feed_fetcher import parse_opml, fetch_feeds, format_digest
 from src.prompt_builder import build_category_prompt, build_synthesis_prompt
-from src.analyzer import analyze_with_claude
+from src.analyzer import analyze_with_claude, analyze
 from src.doc_generator import generate_docx, generate_fallback_docx
 from src.html_generator import generate_html
 from src.pdf_generator import generate_pdf
@@ -46,6 +46,9 @@ def _analyze_categories(
     work_dir: Path,
     today: str,
     model: str | None,
+    provider: str = "claude",
+    api_key: str | None = None,
+    endpoint: str | None = None,
 ) -> tuple[dict[str, str], int]:
     """Phase 1: Analyze each category independently.
 
@@ -64,10 +67,11 @@ def _analyze_categories(
         digest_path = work_dir / f"cat_{safe_name}_{today}.md"
         digest_path.write_text(mini_digest, encoding="utf-8")
 
-        # Build prompt and call Claude
+        # Build prompt and call LLM
         prompt = build_category_prompt(profile_text, language, category)
-        analysis = analyze_with_claude(
-            digest_path, prompt, model=model, timeout=CATEGORY_TIMEOUT
+        analysis = analyze(
+            digest_path, prompt, provider=provider, model=model,
+            timeout=CATEGORY_TIMEOUT, api_key=api_key, endpoint=endpoint,
         )
 
         if analysis:
@@ -81,7 +85,7 @@ def _analyze_categories(
                 for item in items
             )
             results[category] = raw
-            logger.warning("  [%d/%d] %s: Claude failed, using raw items", i, total, category)
+            logger.warning("  [%d/%d] %s: LLM failed, using raw items", i, total, category)
 
     return results, success_count
 
@@ -94,6 +98,9 @@ def _synthesize(
     work_dir: Path,
     today: str,
     model: str | None,
+    provider: str = "claude",
+    api_key: str | None = None,
+    endpoint: str | None = None,
 ) -> str | None:
     """Phase 2: Produce cross-cutting sections from all category analyses."""
     logger.info("  Synthesis pass over %d categories...", len(category_analyses))
@@ -108,8 +115,9 @@ def _synthesize(
     analyses_path.write_text(all_analyses, encoding="utf-8")
 
     prompt = build_synthesis_prompt(profile_text, language, date_display)
-    return analyze_with_claude(
-        analyses_path, prompt, model=model, timeout=SYNTHESIS_TIMEOUT
+    return analyze(
+        analyses_path, prompt, provider=provider, model=model,
+        timeout=SYNTHESIS_TIMEOUT, api_key=api_key, endpoint=endpoint,
     )
 
 
@@ -149,6 +157,9 @@ def run_engine(
     dry_run: bool,
     verbose: bool,
     output_format: str = "docx",
+    provider: str = "claude",
+    api_key: str | None = None,
+    endpoint: str | None = None,
 ) -> None:
     if verbose:
         logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
@@ -199,16 +210,18 @@ def run_engine(
     # 3. Phase 1 — Per-category analysis
     logger.info("Phase 1: Analyzing %d categories...", len(items_by_category))
     category_analyses, category_successes = _analyze_categories(
-        items_by_category, profile_text, language, work_dir, today, model
+        items_by_category, profile_text, language, work_dir, today, model,
+        provider=provider, api_key=api_key, endpoint=endpoint,
     )
-    logger.info("Phase 1 done: %d/%d categories analyzed by Claude", category_successes, len(items_by_category))
+    logger.info("Phase 1 done: %d/%d categories analyzed by %s", category_successes, len(items_by_category), provider)
 
     # 4. Phase 2 — Synthesis (only if we have at least some Claude analyses)
     synthesis = None
     if category_successes > 0:
         logger.info("Phase 2: Synthesis...")
         synthesis = _synthesize(
-            category_analyses, profile_text, language, today_date, work_dir, today, model
+            category_analyses, profile_text, language, today_date, work_dir, today, model,
+            provider=provider, api_key=api_key, endpoint=endpoint,
         )
         if synthesis:
             logger.info("Synthesis: OK")
@@ -271,6 +284,12 @@ def main() -> None:
     run_parser.add_argument("--format", default="docx", choices=["docx", "pdf", "epub"])
     run_parser.add_argument("--max-items", type=int, default=30)
     run_parser.add_argument("--model", default=None)
+    run_parser.add_argument("--provider", default="claude",
+                            choices=["claude", "openai", "lmstudio"])
+    run_parser.add_argument("--api-key", default=None,
+                            help="API key (OpenAI provider)")
+    run_parser.add_argument("--endpoint", default=None,
+                            help="Custom API endpoint (OpenAI/LMStudio)")
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.add_argument("--verbose", action="store_true")
 
@@ -288,6 +307,9 @@ def main() -> None:
             dry_run=args.dry_run,
             verbose=args.verbose,
             output_format=args.format,
+            provider=args.provider,
+            api_key=args.api_key,
+            endpoint=args.endpoint,
         )
 
 

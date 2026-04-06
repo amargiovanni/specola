@@ -180,6 +180,11 @@ private struct AdvancedTab: View {
     @State private var hours = SpecolaSettings.hours
     @State private var claudePath = SpecolaSettings.claudePath
     @State private var outputFormat = SpecolaSettings.outputFormat
+    @State private var llmProvider = SpecolaSettings.llmProvider
+    @State private var openaiApiKey = SpecolaSettings.openaiApiKey
+    @State private var openaiModel = SpecolaSettings.openaiModel
+    @State private var lmstudioEndpoint = SpecolaSettings.lmstudioEndpoint
+    @State private var lmstudioModel = SpecolaSettings.lmstudioModel
 
     var body: some View {
         Form {
@@ -217,12 +222,43 @@ private struct AdvancedTab: View {
                 Stepper("Ultime \(hours) ore", value: $hours, in: 6...72)
                     .onChange(of: hours) { _, val in SpecolaSettings.hours = val }
             }
-            Section("Claude Code CLI") {
-                TextField("Path (auto-detected se vuoto)", text: $claudePath)
-                    .onChange(of: claudePath) { _, val in SpecolaSettings.claudePath = val }
-                Text("Posizioni controllate: /usr/local/bin/claude, ~/.local/bin/claude, ~/.claude/local/claude")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            Section("Modello LLM") {
+                Picker("Provider", selection: $llmProvider) {
+                    Text("Claude Code CLI").tag("claude")
+                    Text("OpenAI").tag("openai")
+                    Text("LM Studio (locale)").tag("lmstudio")
+                }
+                .onChange(of: llmProvider) { _, val in SpecolaSettings.llmProvider = val }
+
+                switch llmProvider {
+                case "claude":
+                    TextField("Path CLI (auto-detected se vuoto)", text: $claudePath)
+                        .onChange(of: claudePath) { _, val in SpecolaSettings.claudePath = val }
+                    Text("Posizioni controllate: /usr/local/bin/claude, ~/.local/bin/claude, ~/.claude/local/claude")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                case "openai":
+                    SecureField("API Key", text: $openaiApiKey)
+                        .onChange(of: openaiApiKey) { _, val in SpecolaSettings.openaiApiKey = val }
+                    TextField("Modello", text: $openaiModel)
+                        .onChange(of: openaiModel) { _, val in SpecolaSettings.openaiModel = val }
+                    Text("Default: gpt-4o. Supporta qualsiasi modello OpenAI chat completions.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                case "lmstudio":
+                    TextField("Endpoint", text: $lmstudioEndpoint)
+                        .onChange(of: lmstudioEndpoint) { _, val in SpecolaSettings.lmstudioEndpoint = val }
+                    TextField("Modello (opzionale)", text: $lmstudioModel)
+                        .onChange(of: lmstudioModel) { _, val in SpecolaSettings.lmstudioModel = val }
+                    Text("LM Studio deve essere avviato con il server locale attivo. Default: http://localhost:1234/v1/chat/completions")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                default:
+                    EmptyView()
+                }
             }
         }
         .formStyle(.grouped)

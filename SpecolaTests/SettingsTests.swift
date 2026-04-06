@@ -183,4 +183,67 @@ final class SettingsTests: XCTestCase {
         let dir = SpecolaSettings.outputDir
         XCTAssertTrue(dir.contains("Documents"))
     }
+
+    // MARK: - LLM Provider defaults
+
+    func testDefaultLlmProvider() {
+        UserDefaults.standard.removeObject(forKey: "llmProvider")
+        XCTAssertEqual(SpecolaSettings.llmProvider, "claude")
+    }
+
+    func testDefaultOpenaiApiKey() {
+        UserDefaults.standard.removeObject(forKey: "openaiApiKey")
+        XCTAssertEqual(SpecolaSettings.openaiApiKey, "")
+    }
+
+    func testDefaultOpenaiModel() {
+        UserDefaults.standard.removeObject(forKey: "openaiModel")
+        XCTAssertEqual(SpecolaSettings.openaiModel, "gpt-4o")
+    }
+
+    func testDefaultLmstudioEndpoint() {
+        UserDefaults.standard.removeObject(forKey: "lmstudioEndpoint")
+        XCTAssertEqual(SpecolaSettings.lmstudioEndpoint, "http://localhost:1234/v1/chat/completions")
+    }
+
+    func testDefaultLmstudioModel() {
+        UserDefaults.standard.removeObject(forKey: "lmstudioModel")
+        XCTAssertEqual(SpecolaSettings.lmstudioModel, "")
+    }
+
+    // MARK: - LLM Provider set and get
+
+    func testSetAndGetLlmProvider() {
+        SpecolaSettings.llmProvider = "openai"
+        XCTAssertEqual(SpecolaSettings.llmProvider, "openai")
+        SpecolaSettings.llmProvider = "lmstudio"
+        XCTAssertEqual(SpecolaSettings.llmProvider, "lmstudio")
+        SpecolaSettings.llmProvider = "claude"
+        XCTAssertEqual(SpecolaSettings.llmProvider, "claude")
+        UserDefaults.standard.removeObject(forKey: "llmProvider")
+    }
+
+    func testSetAndGetOpenaiApiKey() {
+        SpecolaSettings.openaiApiKey = "sk-test-key-123"
+        XCTAssertEqual(SpecolaSettings.openaiApiKey, "sk-test-key-123")
+        UserDefaults.standard.removeObject(forKey: "openaiApiKey")
+    }
+
+    func testSetAndGetOpenaiModel() {
+        SpecolaSettings.openaiModel = "gpt-4-turbo"
+        XCTAssertEqual(SpecolaSettings.openaiModel, "gpt-4-turbo")
+        UserDefaults.standard.removeObject(forKey: "openaiModel")
+    }
+
+    func testSetAndGetLmstudioEndpoint() {
+        SpecolaSettings.lmstudioEndpoint = "http://gpu-server:8080/v1/chat/completions"
+        XCTAssertEqual(SpecolaSettings.lmstudioEndpoint, "http://gpu-server:8080/v1/chat/completions")
+        UserDefaults.standard.removeObject(forKey: "lmstudioEndpoint")
+    }
+
+    func testSetAndGetLmstudioModel() {
+        SpecolaSettings.lmstudioModel = "llama-3.3-70b"
+        XCTAssertEqual(SpecolaSettings.lmstudioModel, "llama-3.3-70b")
+        UserDefaults.standard.removeObject(forKey: "lmstudioModel")
+    }
 }
