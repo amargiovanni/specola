@@ -181,8 +181,7 @@ private struct AdvancedTab: View {
     @State private var claudePath = SpecolaSettings.claudePath
     @State private var outputFormat = SpecolaSettings.outputFormat
     @State private var llmProvider = SpecolaSettings.llmProvider
-    @State private var openaiApiKey = SpecolaSettings.openaiApiKey
-    @State private var openaiModel = SpecolaSettings.openaiModel
+    @State private var codexModel = SpecolaSettings.codexModel
     @State private var lmstudioEndpoint = SpecolaSettings.lmstudioEndpoint
     @State private var lmstudioModel = SpecolaSettings.lmstudioModel
 
@@ -225,7 +224,7 @@ private struct AdvancedTab: View {
             Section("Modello LLM") {
                 Picker("Provider", selection: $llmProvider) {
                     Text("Claude Code CLI").tag("claude")
-                    Text("OpenAI").tag("openai")
+                    Text("OpenAI Codex CLI").tag("codex")
                     Text("LM Studio (locale)").tag("lmstudio")
                 }
                 .onChange(of: llmProvider) { _, val in SpecolaSettings.llmProvider = val }
@@ -238,12 +237,10 @@ private struct AdvancedTab: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                case "openai":
-                    SecureField("API Key", text: $openaiApiKey)
-                        .onChange(of: openaiApiKey) { _, val in SpecolaSettings.openaiApiKey = val }
-                    TextField("Modello", text: $openaiModel)
-                        .onChange(of: openaiModel) { _, val in SpecolaSettings.openaiModel = val }
-                    Text("Default: gpt-4o. Supporta qualsiasi modello OpenAI chat completions.")
+                case "codex":
+                    TextField("Modello (opzionale)", text: $codexModel)
+                        .onChange(of: codexModel) { _, val in SpecolaSettings.codexModel = val }
+                    Text("Richiede Codex CLI installato (npm install -g @openai/codex) e OPENAI_API_KEY configurata nel terminale.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 

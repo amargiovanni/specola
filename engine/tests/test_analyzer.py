@@ -5,10 +5,8 @@ from src.analyzer import (
     analyze,
     analyze_with_claude,
     _analyze_claude,
-    _analyze_openai,
+    _analyze_codex,
     _analyze_lmstudio,
-    _OPENAI_DEFAULT_ENDPOINT,
-    _OPENAI_DEFAULT_MODEL,
     _LMSTUDIO_DEFAULT_ENDPOINT,
     _LMSTUDIO_DEFAULT_MODEL,
 )
@@ -27,13 +25,13 @@ class TestAnalyzeRouter:
             m.assert_called_once()
             assert result == "result"
 
-    def test_routes_to_openai(self, tmp_path):
+    def test_routes_to_codex(self, tmp_path):
         digest = tmp_path / "d.md"
         digest.write_text("content")
-        with patch("src.analyzer._analyze_openai", return_value="openai result") as m:
-            result = analyze(digest, "prompt", provider="openai", api_key="sk-test")
+        with patch("src.analyzer._analyze_codex", return_value="codex result") as m:
+            result = analyze(digest, "prompt", provider="codex")
             m.assert_called_once()
-            assert result == "openai result"
+            assert result == "codex result"
 
     def test_routes_to_lmstudio(self, tmp_path):
         digest = tmp_path / "d.md"
@@ -47,7 +45,7 @@ class TestAnalyzeRouter:
         digest = tmp_path / "d.md"
         digest.write_text("content")
         with patch("src.analyzer._analyze_claude", return_value="claude") as m:
-            result = analyze(digest, "prompt", provider="unknown")
+            analyze(digest, "prompt", provider="unknown")
             m.assert_called_once()
 
     def test_passes_model_to_claude(self, tmp_path):
@@ -58,13 +56,13 @@ class TestAnalyzeRouter:
             _, kwargs = m.call_args
             assert kwargs["model"] == "opus"
 
-    def test_passes_api_key_to_openai(self, tmp_path):
+    def test_passes_model_to_codex(self, tmp_path):
         digest = tmp_path / "d.md"
         digest.write_text("content")
-        with patch("src.analyzer._analyze_openai", return_value="r") as m:
-            analyze(digest, "p", provider="openai", api_key="sk-123")
+        with patch("src.analyzer._analyze_codex", return_value="r") as m:
+            analyze(digest, "p", provider="codex", model="o3-pro")
             _, kwargs = m.call_args
-            assert kwargs["api_key"] == "sk-123"
+            assert kwargs["model"] == "o3-pro"
 
     def test_passes_endpoint_to_lmstudio(self, tmp_path):
         digest = tmp_path / "d.md"
@@ -81,6 +79,12 @@ class TestAnalyzeRouter:
             analyze(digest, "p", timeout=42)
             _, kwargs = m.call_args
             assert kwargs["timeout"] == 42
+
+    def test_no_api_key_param(self):
+        """analyze() should not accept api_key parameter anymore."""
+        import inspect
+        sig = inspect.signature(analyze)
+        assert "api_key" not in sig.parameters
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -141,8 +145,7 @@ class TestAnalyzeClaude:
         mock_result = MagicMock(returncode=0, stdout="output")
         with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
             _analyze_claude(digest, "prompt")
-            args = mock_run.call_args
-            assert args[1]["timeout"] == 600
+            assert mock_run.call_args[1]["timeout"] == 600
 
     def test_custom_timeout(self, tmp_path):
         digest = tmp_path / "digest.md"
@@ -150,8 +153,7 @@ class TestAnalyzeClaude:
         mock_result = MagicMock(returncode=0, stdout="output")
         with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
             _analyze_claude(digest, "prompt", timeout=120)
-            args = mock_run.call_args
-            assert args[1]["timeout"] == 120
+            assert mock_run.call_args[1]["timeout"] == 120
 
     def test_no_model_flag_when_none(self, tmp_path):
         digest = tmp_path / "digest.md"
@@ -190,10 +192,118 @@ class TestAnalyzeClaude:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# _analyze_openai() — OpenAI API
+# _analyze_codex() — OpenAI Codex CLI
 # ═══════════════════════════════════════════════════════════════════════
 
-def _mock_urlopen(response_body, status=200):
+class TestAnalyzeCodex:
+    def test_success(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("digest content")
+        mock_result = MagicMock(returncode=0, stdout="Codex analysis result")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            result = _analyze_codex(digest, "prompt text")
+            assert result == "Codex analysis result"
+            mock_run.assert_called_once()
+
+    def test_uses_codex_exec_command(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="ok")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            _analyze_codex(digest, "my prompt")
+            cmd = mock_run.call_args[0][0]
+            assert cmd[0] == "codex"
+            assert cmd[1] == "exec"
+            assert cmd[2] == "my prompt"
+
+    def test_with_model(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="ok")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            _analyze_codex(digest, "prompt", model="o3-pro")
+            cmd = mock_run.call_args[0][0]
+            assert "--model" in cmd
+            assert "o3-pro" in cmd
+
+    def test_no_model_flag_when_none(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="ok")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            _analyze_codex(digest, "prompt", model=None)
+            cmd = mock_run.call_args[0][0]
+            assert "--model" not in cmd
+
+    def test_stdin_is_digest_file(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="ok")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            _analyze_codex(digest, "prompt")
+            assert mock_run.call_args[1]["stdin"] is not None
+
+    def test_capture_output(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="ok")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            _analyze_codex(digest, "prompt")
+            assert mock_run.call_args[1]["capture_output"] is True
+            assert mock_run.call_args[1]["text"] is True
+
+    def test_file_not_found_returns_none(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        with patch("src.analyzer.subprocess.run", side_effect=FileNotFoundError("codex not found")):
+            result = _analyze_codex(digest, "prompt")
+            assert result is None
+
+    def test_timeout_returns_none(self, tmp_path):
+        import subprocess
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        with patch("src.analyzer.subprocess.run", side_effect=subprocess.TimeoutExpired("codex", 300)):
+            result = _analyze_codex(digest, "prompt", timeout=300)
+            assert result is None
+
+    def test_nonzero_exit_code_returns_none(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        for code in [1, 2, 127]:
+            mock_result = MagicMock(returncode=code, stdout="", stderr="err")
+            with patch("src.analyzer.subprocess.run", return_value=mock_result):
+                assert _analyze_codex(digest, "prompt") is None
+
+    def test_default_timeout(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="ok")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            _analyze_codex(digest, "prompt")
+            assert mock_run.call_args[1]["timeout"] == 600
+
+    def test_custom_timeout(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="ok")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result) as mock_run:
+            _analyze_codex(digest, "prompt", timeout=120)
+            assert mock_run.call_args[1]["timeout"] == 120
+
+    def test_returns_raw_stdout(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        mock_result = MagicMock(returncode=0, stdout="  output\n")
+        with patch("src.analyzer.subprocess.run", return_value=mock_result):
+            assert _analyze_codex(digest, "p") == "  output\n"
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# _analyze_lmstudio() — LMStudio local
+# ═══════════════════════════════════════════════════════════════════════
+
+def _mock_urlopen(response_body):
     """Create a mock for urllib.request.urlopen."""
     mock_resp = MagicMock()
     mock_resp.read.return_value = json.dumps(response_body).encode("utf-8")
@@ -201,146 +311,6 @@ def _mock_urlopen(response_body, status=200):
     mock_resp.__exit__ = Mock(return_value=False)
     return mock_resp
 
-
-class TestAnalyzeOpenai:
-    def test_success(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("digest content")
-        resp = {"choices": [{"message": {"content": "Analysis result"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            result = _analyze_openai(digest, "prompt", api_key="sk-test")
-            assert result == "Analysis result"
-
-    def test_no_api_key_returns_none(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        result = _analyze_openai(digest, "prompt", api_key=None)
-        assert result is None
-
-    def test_empty_api_key_returns_none(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        result = _analyze_openai(digest, "prompt", api_key="")
-        assert result is None
-
-    def test_uses_default_model(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"choices": [{"message": {"content": "ok"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            _analyze_openai(digest, "prompt", api_key="sk-test")
-            call_args = m.call_args[0][0]
-            body = json.loads(call_args.data)
-            assert body["model"] == _OPENAI_DEFAULT_MODEL
-
-    def test_custom_model(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"choices": [{"message": {"content": "ok"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            _analyze_openai(digest, "prompt", model="gpt-4-turbo", api_key="sk-test")
-            body = json.loads(m.call_args[0][0].data)
-            assert body["model"] == "gpt-4-turbo"
-
-    def test_uses_default_endpoint(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"choices": [{"message": {"content": "ok"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            _analyze_openai(digest, "prompt", api_key="sk-test")
-            req = m.call_args[0][0]
-            assert req.full_url == _OPENAI_DEFAULT_ENDPOINT
-
-    def test_custom_endpoint(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"choices": [{"message": {"content": "ok"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            _analyze_openai(digest, "prompt", api_key="sk-test",
-                            endpoint="https://custom.api.com/v1/chat")
-            req = m.call_args[0][0]
-            assert req.full_url == "https://custom.api.com/v1/chat"
-
-    def test_sends_bearer_auth(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"choices": [{"message": {"content": "ok"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            _analyze_openai(digest, "prompt", api_key="sk-my-key-123")
-            req = m.call_args[0][0]
-            assert req.get_header("Authorization") == "Bearer sk-my-key-123"
-
-    def test_sends_prompt_as_system_message(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("the digest")
-        resp = {"choices": [{"message": {"content": "ok"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            _analyze_openai(digest, "system prompt here", api_key="sk-test")
-            body = json.loads(m.call_args[0][0].data)
-            assert body["messages"][0]["role"] == "system"
-            assert body["messages"][0]["content"] == "system prompt here"
-            assert body["messages"][1]["role"] == "user"
-            assert body["messages"][1]["content"] == "the digest"
-
-    def test_http_error_returns_none(self, tmp_path):
-        import urllib.error
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        with patch("urllib.request.urlopen",
-                    side_effect=urllib.error.HTTPError("url", 429, "rate limit", {}, None)):
-            result = _analyze_openai(digest, "p", api_key="sk-test")
-            assert result is None
-
-    def test_url_error_returns_none(self, tmp_path):
-        import urllib.error
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        with patch("urllib.request.urlopen",
-                    side_effect=urllib.error.URLError("connection refused")):
-            result = _analyze_openai(digest, "p", api_key="sk-test")
-            assert result is None
-
-    def test_timeout_returns_none(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        with patch("urllib.request.urlopen", side_effect=TimeoutError):
-            result = _analyze_openai(digest, "p", api_key="sk-test", timeout=5)
-            assert result is None
-
-    def test_malformed_response_returns_none(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"unexpected": "format"}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)):
-            result = _analyze_openai(digest, "p", api_key="sk-test")
-            assert result is None
-
-    def test_empty_choices_returns_none(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"choices": []}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)):
-            result = _analyze_openai(digest, "p", api_key="sk-test")
-            assert result is None
-
-    def test_missing_digest_file_returns_none(self, tmp_path):
-        missing = tmp_path / "nonexistent.md"
-        result = _analyze_openai(missing, "p", api_key="sk-test")
-        assert result is None
-
-    def test_temperature_is_low(self, tmp_path):
-        digest = tmp_path / "d.md"
-        digest.write_text("content")
-        resp = {"choices": [{"message": {"content": "ok"}}]}
-        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
-            _analyze_openai(digest, "p", api_key="sk-test")
-            body = json.loads(m.call_args[0][0].data)
-            assert body["temperature"] == 0.3
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# _analyze_lmstudio() — LMStudio local
-# ═══════════════════════════════════════════════════════════════════════
 
 class TestAnalyzeLmstudio:
     def test_success(self, tmp_path):
@@ -430,6 +400,14 @@ class TestAnalyzeLmstudio:
             result = _analyze_lmstudio(digest, "p")
             assert result is None
 
+    def test_empty_choices_returns_none(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        resp = {"choices": []}
+        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)):
+            result = _analyze_lmstudio(digest, "p")
+            assert result is None
+
     def test_missing_digest_file_returns_none(self, tmp_path):
         missing = tmp_path / "nonexistent.md"
         result = _analyze_lmstudio(missing, "p")
@@ -446,6 +424,15 @@ class TestAnalyzeLmstudio:
             assert body["messages"][0]["content"] == "system prompt"
             assert body["messages"][1]["role"] == "user"
             assert body["messages"][1]["content"] == "the digest"
+
+    def test_temperature_is_low(self, tmp_path):
+        digest = tmp_path / "d.md"
+        digest.write_text("content")
+        resp = {"choices": [{"message": {"content": "ok"}}]}
+        with patch("urllib.request.urlopen", return_value=_mock_urlopen(resp)) as m:
+            _analyze_lmstudio(digest, "p")
+            body = json.loads(m.call_args[0][0].data)
+            assert body["temperature"] == 0.3
 
 
 # ═══════════════════════════════════════════════════════════════════════

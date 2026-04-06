@@ -50,10 +50,8 @@ enum EngineService {
 
         // Provider-specific arguments
         let provider = SpecolaSettings.llmProvider
-        if provider == "openai" {
-            let apiKey = SpecolaSettings.openaiApiKey
-            if !apiKey.isEmpty { args += ["--api-key", apiKey] }
-            let model = SpecolaSettings.openaiModel
+        if provider == "codex" {
+            let model = SpecolaSettings.codexModel
             if !model.isEmpty { args += ["--model", model] }
         } else if provider == "lmstudio" {
             let endpoint = SpecolaSettings.lmstudioEndpoint

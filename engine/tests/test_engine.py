@@ -504,7 +504,7 @@ class TestRunEngineProviders:
     @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
     @patch("specola_engine.parse_opml")
-    def test_openai_provider_passes_api_key(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
+    def test_codex_provider(self, mock_parse, mock_fetch, mock_analyze, tmp_path, capsys):
         opml = tmp_path / "test.opml"
         opml.write_text('<opml version="2.0"><head/><body/></opml>')
         profile = tmp_path / "profile.md"
@@ -517,14 +517,12 @@ class TestRunEngineProviders:
         mock_analyze.return_value = "analysis"
 
         run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
-                   hours=24, language="it", max_items=30, model="gpt-4o", dry_run=False, verbose=False,
-                   provider="openai", api_key="sk-test-key", endpoint=None)
+                   hours=24, language="it", max_items=30, model="o3-pro", dry_run=False, verbose=False,
+                   provider="codex")
 
-        # analyze() should have been called with openai provider and api_key
         for call in mock_analyze.call_args_list:
             _, kwargs = call
-            assert kwargs["provider"] == "openai"
-            assert kwargs["api_key"] == "sk-test-key"
+            assert kwargs["provider"] == "codex"
 
     @patch("specola_engine.analyze")
     @patch("specola_engine.fetch_feeds")
@@ -577,17 +575,15 @@ class TestAnalyzeCategoriesProvider:
     """Test _analyze_categories passes provider args through."""
 
     @patch("specola_engine.analyze")
-    def test_passes_provider_and_key(self, mock_analyze, tmp_path):
+    def test_passes_provider_and_endpoint(self, mock_analyze, tmp_path):
         mock_analyze.return_value = "result"
         items = {"Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}]}
         work_dir = tmp_path / ".work"
         work_dir.mkdir()
         _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", None,
-                            provider="openai", api_key="sk-key", endpoint="https://custom.api")
+                            provider="codex")
         _, kwargs = mock_analyze.call_args
-        assert kwargs["provider"] == "openai"
-        assert kwargs["api_key"] == "sk-key"
-        assert kwargs["endpoint"] == "https://custom.api"
+        assert kwargs["provider"] == "codex"
 
 
 class TestSynthesizeProvider:

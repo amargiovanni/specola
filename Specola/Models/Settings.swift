@@ -15,8 +15,7 @@ enum SpecolaSettings {
         static let hasCompletedSetup = "hasCompletedSetup"
         static let outputFormat = "outputFormat"
         static let llmProvider = "llmProvider"
-        static let openaiApiKey = "openaiApiKey"
-        static let openaiModel = "openaiModel"
+        static let codexModel = "codexModel"
         static let lmstudioEndpoint = "lmstudioEndpoint"
         static let lmstudioModel = "lmstudioModel"
     }
@@ -84,14 +83,9 @@ enum SpecolaSettings {
         set { defaults.set(newValue, forKey: Key.llmProvider) }
     }
 
-    static var openaiApiKey: String {
-        get { defaults.string(forKey: Key.openaiApiKey) ?? "" }
-        set { defaults.set(newValue, forKey: Key.openaiApiKey) }
-    }
-
-    static var openaiModel: String {
-        get { defaults.string(forKey: Key.openaiModel) ?? "gpt-4o" }
-        set { defaults.set(newValue, forKey: Key.openaiModel) }
+    static var codexModel: String {
+        get { defaults.string(forKey: Key.codexModel) ?? "" }
+        set { defaults.set(newValue, forKey: Key.codexModel) }
     }
 
     static var lmstudioEndpoint: String {
