@@ -1,6 +1,7 @@
 """HTML generation from markdown — shared building block for PDF and EPUB."""
 from __future__ import annotations
 
+import html as html_mod
 import re
 from pathlib import Path
 
@@ -119,10 +120,14 @@ _HTML_TEMPLATE = """\
   }}
 
   /* Print */
+  @page {{
+    size: A4;
+    margin: 2.5cm;
+  }}
   @media print {{
     body {{
       max-width: none;
-      padding: 2.5cm;
+      padding: 0;
       font-size: 10pt;
     }}
 
@@ -160,8 +165,8 @@ _HTML_TEMPLATE = """\
 
 def _inline_format(text: str) -> str:
     """Convert bold and link markdown to HTML inline elements."""
-    # Links first, then bold (to avoid double-processing)
-    text = _LINK_RE.sub(r'<a href="\2">\1</a>', text)
+    text = html_mod.escape(text, quote=False)
+    text = _LINK_RE.sub(r'<a href="\2" target="_blank">\1</a>', text)
     text = _BOLD_RE.sub(r"<strong>\1</strong>", text)
     return text
 

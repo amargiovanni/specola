@@ -47,7 +47,7 @@ class TestMarkdownToHtml:
 
     def test_link(self):
         html = markdown_to_html("See [the article](https://example.com) now.")
-        assert '<a href="https://example.com">the article</a>' in html
+        assert '<a href="https://example.com" target="_blank">the article</a>' in html
 
     def test_horizontal_rule(self):
         html = markdown_to_html("---")
