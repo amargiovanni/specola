@@ -1,6 +1,8 @@
 .superpowers/
 engine/.venv/
 engine/.work/
+**/__pycache__/
+*.pyc
 **/.DS_Store
 
 # Xcode

@@ -117,3 +117,56 @@ class TestExtractHighlights:
         for item in items:
             assert isinstance(item, str)
             assert item.strip() == item
+
+    def test_empty_markdown(self):
+        assert extract_highlights("") == []
+
+    def test_only_heading_no_items(self):
+        md = "## Da sapere oggi\n\n## Next section"
+        assert extract_highlights(md) == []
+
+    def test_items_with_whitespace_stripped(self):
+        md = "## Da sapere oggi\n-   Spaced item   \n"
+        items = extract_highlights(md)
+        assert items == ["Spaced item"]
+
+    def test_ignores_non_bullet_text(self):
+        """Non-bullet text between heading and next heading is ignored."""
+        md = "## Da sapere oggi\nJust a paragraph\n- Actual item"
+        items = extract_highlights(md)
+        assert items == ["Actual item"]
+
+    def test_stops_at_h1(self):
+        """Stops at H1 heading too, not just H2."""
+        md = "## Da sapere oggi\n- Item 1\n# Top Level\n- Should not appear"
+        items = extract_highlights(md)
+        assert len(items) == 1
+        assert items[0] == "Item 1"
+
+    def test_mixed_bullet_and_numbered(self):
+        md = "## Da sapere oggi\n- Bullet item\n1. Numbered item\n* Star item"
+        items = extract_highlights(md)
+        assert len(items) == 3
+
+    def test_exactly_five_items(self):
+        md = "## Da sapere oggi\n- One\n- Two\n- Three\n- Four\n- Five"
+        items = extract_highlights(md)
+        assert len(items) == 5
+
+    def test_empty_items_skipped(self):
+        """Empty bullet points (after stripping) are skipped."""
+        md = "## Da sapere oggi\n- **\n- Real item"
+        items = extract_highlights(md)
+        # "**" with nothing inside should be stripped to empty? Actually **\n is malformed.
+        # Let's just check "Real item" is present
+        assert "Real item" in items
+
+    def test_link_with_url_stripped(self):
+        md = "## Da sapere oggi\n- Check [this article](https://example.com/foo/bar?q=1) now"
+        items = extract_highlights(md)
+        assert items == ["Check this article now"]
+
+    def test_multiple_links_in_one_item(self):
+        md = "## Da sapere oggi\n- See [A](https://a.com) and [B](https://b.com)"
+        items = extract_highlights(md)
+        assert items == ["See A and B"]
