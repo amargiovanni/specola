@@ -191,14 +191,9 @@ final class SettingsTests: XCTestCase {
         XCTAssertEqual(SpecolaSettings.llmProvider, "claude")
     }
 
-    func testDefaultOpenaiApiKey() {
-        UserDefaults.standard.removeObject(forKey: "openaiApiKey")
-        XCTAssertEqual(SpecolaSettings.openaiApiKey, "")
-    }
-
-    func testDefaultOpenaiModel() {
-        UserDefaults.standard.removeObject(forKey: "openaiModel")
-        XCTAssertEqual(SpecolaSettings.openaiModel, "gpt-4o")
+    func testDefaultCodexModel() {
+        UserDefaults.standard.removeObject(forKey: "codexModel")
+        XCTAssertEqual(SpecolaSettings.codexModel, "")
     }
 
     func testDefaultLmstudioEndpoint() {
@@ -214,8 +209,8 @@ final class SettingsTests: XCTestCase {
     // MARK: - LLM Provider set and get
 
     func testSetAndGetLlmProvider() {
-        SpecolaSettings.llmProvider = "openai"
-        XCTAssertEqual(SpecolaSettings.llmProvider, "openai")
+        SpecolaSettings.llmProvider = "codex"
+        XCTAssertEqual(SpecolaSettings.llmProvider, "codex")
         SpecolaSettings.llmProvider = "lmstudio"
         XCTAssertEqual(SpecolaSettings.llmProvider, "lmstudio")
         SpecolaSettings.llmProvider = "claude"
@@ -223,16 +218,10 @@ final class SettingsTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "llmProvider")
     }
 
-    func testSetAndGetOpenaiApiKey() {
-        SpecolaSettings.openaiApiKey = "sk-test-key-123"
-        XCTAssertEqual(SpecolaSettings.openaiApiKey, "sk-test-key-123")
-        UserDefaults.standard.removeObject(forKey: "openaiApiKey")
-    }
-
-    func testSetAndGetOpenaiModel() {
-        SpecolaSettings.openaiModel = "gpt-4-turbo"
-        XCTAssertEqual(SpecolaSettings.openaiModel, "gpt-4-turbo")
-        UserDefaults.standard.removeObject(forKey: "openaiModel")
+    func testSetAndGetCodexModel() {
+        SpecolaSettings.codexModel = "o3-pro"
+        XCTAssertEqual(SpecolaSettings.codexModel, "o3-pro")
+        UserDefaults.standard.removeObject(forKey: "codexModel")
     }
 
     func testSetAndGetLmstudioEndpoint() {

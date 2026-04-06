@@ -47,7 +47,6 @@ def _analyze_categories(
     today: str,
     model: str | None,
     provider: str = "claude",
-    api_key: str | None = None,
     endpoint: str | None = None,
 ) -> tuple[dict[str, str], int]:
     """Phase 1: Analyze each category independently.
@@ -71,7 +70,7 @@ def _analyze_categories(
         prompt = build_category_prompt(profile_text, language, category)
         analysis = analyze(
             digest_path, prompt, provider=provider, model=model,
-            timeout=CATEGORY_TIMEOUT, api_key=api_key, endpoint=endpoint,
+            timeout=CATEGORY_TIMEOUT, endpoint=endpoint,
         )
 
         if analysis:
@@ -99,7 +98,6 @@ def _synthesize(
     today: str,
     model: str | None,
     provider: str = "claude",
-    api_key: str | None = None,
     endpoint: str | None = None,
 ) -> str | None:
     """Phase 2: Produce cross-cutting sections from all category analyses."""
@@ -117,7 +115,7 @@ def _synthesize(
     prompt = build_synthesis_prompt(profile_text, language, date_display)
     return analyze(
         analyses_path, prompt, provider=provider, model=model,
-        timeout=SYNTHESIS_TIMEOUT, api_key=api_key, endpoint=endpoint,
+        timeout=SYNTHESIS_TIMEOUT, endpoint=endpoint,
     )
 
 
@@ -158,7 +156,6 @@ def run_engine(
     verbose: bool,
     output_format: str = "docx",
     provider: str = "claude",
-    api_key: str | None = None,
     endpoint: str | None = None,
 ) -> None:
     if verbose:
@@ -211,7 +208,7 @@ def run_engine(
     logger.info("Phase 1: Analyzing %d categories...", len(items_by_category))
     category_analyses, category_successes = _analyze_categories(
         items_by_category, profile_text, language, work_dir, today, model,
-        provider=provider, api_key=api_key, endpoint=endpoint,
+        provider=provider, endpoint=endpoint,
     )
     logger.info("Phase 1 done: %d/%d categories analyzed by %s", category_successes, len(items_by_category), provider)
 
@@ -221,7 +218,7 @@ def run_engine(
         logger.info("Phase 2: Synthesis...")
         synthesis = _synthesize(
             category_analyses, profile_text, language, today_date, work_dir, today, model,
-            provider=provider, api_key=api_key, endpoint=endpoint,
+            provider=provider, endpoint=endpoint,
         )
         if synthesis:
             logger.info("Synthesis: OK")
@@ -285,11 +282,9 @@ def main() -> None:
     run_parser.add_argument("--max-items", type=int, default=30)
     run_parser.add_argument("--model", default=None)
     run_parser.add_argument("--provider", default="claude",
-                            choices=["claude", "openai", "lmstudio"])
-    run_parser.add_argument("--api-key", default=None,
-                            help="API key (OpenAI provider)")
+                            choices=["claude", "codex", "lmstudio"])
     run_parser.add_argument("--endpoint", default=None,
-                            help="Custom API endpoint (OpenAI/LMStudio)")
+                            help="Custom API endpoint (LMStudio)")
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.add_argument("--verbose", action="store_true")
 
@@ -308,7 +303,6 @@ def main() -> None:
             verbose=args.verbose,
             output_format=args.format,
             provider=args.provider,
-            api_key=args.api_key,
             endpoint=args.endpoint,
         )
 

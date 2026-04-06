@@ -4,7 +4,7 @@
 
 Specola is a native macOS menubar app that fetches your RSS feeds every morning, has your AI of choice analyze and prioritize them based on your professional profile, and delivers a polished briefing in your chosen format (DOCX, PDF, or EPUB) — your personal intelligence report, ready before your first coffee. Every briefing is also published as a standalone HTML page in a browsable portal archive, and today's highlights appear in a Notification Center widget.
 
-Choose your LLM backend: **Claude Code CLI** for zero-config local analysis, **OpenAI API** for GPT-4o and beyond, or **LM Studio** for fully offline analysis with your own local models.
+Choose your LLM backend: **Claude Code CLI** for zero-config local analysis, **OpenAI Codex CLI** for OpenAI models, or **LM Studio** for fully offline analysis with your own local models.
 
 The name comes from *specola*: the observatory tower from which astronomers scan the horizon.
 
@@ -16,7 +16,7 @@ The name comes from *specola*: the observatory tower from which astronomers scan
     OPML feeds       Your choice of AI         Your briefing
    ┌──────────┐     ┌──────────────────┐     ┌──────────────┐
    │ 200+ RSS │────▶│  Claude CLI      │────▶│  DOCX / PDF  │
-   │  sources  │     │  OpenAI API      │     │  / EPUB      │
+   │  sources  │     │  Codex CLI       │     │  / EPUB      │
    └──────────┘     │  LM Studio       │     └──────────────┘
          │          └──────────────────┘       + HTML portal
      concurrent       prioritized by           + NC widget
@@ -25,12 +25,12 @@ The name comes from *specola*: the observatory tower from which astronomers scan
 
 1. **You configure** your RSS feeds (OPML file), describe your professional profile, and pick your LLM provider
 2. **Every day at your chosen time**, Specola fetches all feeds concurrently (up to 20 threads)
-3. **Your chosen AI** — Claude Code CLI, OpenAI, or a local model via LM Studio — analyzes the full digest and produces a deep, structured briefing tailored to your role, stack, and interests
+3. **Your chosen AI** — Claude Code CLI, OpenAI Codex CLI, or a local model via LM Studio — analyzes the full digest and produces a deep, structured briefing tailored to your role, stack, and interests
 4. **A premium report** (DOCX, PDF, or EPUB — your choice) lands in your Documents folder — professionally formatted, with clickable source links, ready to read, share, or archive
 5. **An HTML portal** is always generated alongside — a browsable archive of all your briefings, openable in any browser
 6. **A Notification Center widget** shows today's key highlights at a glance
 
-Works fully offline with LM Studio. Or use Claude/OpenAI for cloud-grade analysis. Your data, your choice.
+Works fully offline with LM Studio. Or use Claude/Codex for cloud-grade analysis. Your data, your choice.
 
 ---
 
@@ -97,7 +97,7 @@ Available in **Italian** and **English**.
 | Requirement | Details |
 |-------------|---------|
 | **macOS** | 14 (Sonoma) or later |
-| **LLM provider** | At least one of: **Claude Code CLI** ([install](https://docs.anthropic.com/en/docs/claude-code)), **OpenAI API key**, or **LM Studio** ([download](https://lmstudio.ai)) running locally |
+| **LLM provider** | At least one of: **Claude Code CLI** ([install](https://docs.anthropic.com/en/docs/claude-code)), **OpenAI Codex CLI** (`npm install -g @openai/codex`), or **LM Studio** ([download](https://lmstudio.ai)) running locally |
 | **Python** | 3.9+ (ships with macOS, or install via `brew install python`) |
 | **RSS feeds** | An OPML file exported from any feed reader (Feedly, NetNewsWire, Inoreader, etc.) |
 
@@ -140,7 +140,7 @@ xcodegen generate
 3. **Click "Impostazioni..."** to open the Settings window
 4. **Fonti tab** — click "Scegli file OPML..." and import your feeds
 5. **Profilo tab** — describe your role, stack, interests, and projects in plain text. The more detail you provide, the better Specola personalizes the briefing
-7. **Avanzate tab** (optional) — pick your LLM provider: Claude CLI (default), OpenAI (enter API key), or LM Studio (start server first)
+7. **Avanzate tab** (optional) — pick your LLM provider: Claude CLI (default), Codex CLI, or LM Studio (start server first)
 8. **Close Settings** and click **"Genera ora"** in the popover
 9. Wait a few minutes — Specola fetches all feeds, sends the digest to your AI for analysis, and renders the output
 10. A macOS notification appears when done. The briefing opens with a click.
@@ -169,7 +169,7 @@ Specola is a three-component system. The Swift app handles UI and scheduling; th
 │  │  MenuBarExtra    │────────▶│  1. Parse OPML                │  │
 │  │  Popover         │         │  2. Fetch RSS (20 threads)    │  │
 │  │  Settings        │  JSON   │  3. Build prompt + profile    │  │
-│  │  Scheduler       │◀────────│  4. Analyze (Claude/OpenAI/   │  │
+│  │  Scheduler       │◀────────│  4. Analyze (Claude/Codex/    │  │
 │  │  Notifications   │  stdout │     LMStudio)                 │  │
 │  │                  │         │  5. Render HTML (always)      │  │
 │  └────────┬─────────┘         │  6. Render DOCX/PDF/EPUB      │  │
@@ -205,7 +205,7 @@ Specola is a three-component system. The Swift app handles UI and scheduling; th
 | PDF generation | Python (`weasyprint`) | HTML→PDF with full CSS support |
 | EPUB generation | Python (`ebooklib`) | Standard EPUB3 output |
 | HTML portal | Python (string templates) | Static HTML, zero dependencies |
-| LLM invocation | Python (`subprocess` / `urllib`) | Claude via CLI subprocess, OpenAI/LMStudio via HTTP API — zero external dependencies |
+| LLM invocation | Python (`subprocess` / `urllib`) | Claude and Codex via CLI subprocess, LMStudio via HTTP API — zero external dependencies |
 | macOS menubar UI | Swift (SwiftUI `MenuBarExtra`) | Native, lightweight, no dock icon |
 | Notification Center widget | Swift (WidgetKit) | Native widget with App Group data sharing |
 | Scheduling & wake detection | Swift (`Timer` + `NSWorkspace`) | Proper OS integration |
@@ -218,7 +218,7 @@ Specola is a three-component system. The Swift app handles UI and scheduling; th
 Swift → Python:  Process() with CLI arguments
                  --opml, --profile, --output-dir, --hours, --language, --format
                  --provider claude|openai|lmstudio
-                 --api-key (OpenAI), --endpoint (LMStudio/OpenAI), --model
+                 --endpoint (LMStudio), --model
 
 Python → Swift:  JSON on stdout
                  {"status": "ok", "output_path": "...", "html_path": "...",
@@ -233,7 +233,7 @@ Python → Swift:  JSON on stdout
 |--------|---------------|-------------|
 | `feed_fetcher.py` | OPML parsing + RSS fetch | `xml.etree.ElementTree` for OPML, `feedparser` for RSS, `ThreadPoolExecutor` with 20 workers, strips HTML, filters by time window, handles timezone-aware dates |
 | `prompt_builder.py` | Prompt assembly | Three-part prompt: system instruction + user profile (verbatim) + output instructions. Hardcoded IT/EN templates. Appends category list. |
-| `analyzer.py` | LLM invocation | Routes to Claude CLI (`subprocess`), OpenAI API (`urllib`), or LMStudio (`urllib`). No retry, no backoff. Configurable timeout. Returns None on failure. Zero external HTTP dependencies. |
+| `analyzer.py` | LLM invocation | Routes to Claude CLI, Codex CLI (both via `subprocess`), or LMStudio (`urllib`). No retry, no backoff. Configurable timeout. Returns None on failure. |
 | `doc_generator.py` | DOCX rendering | Line-by-line markdown parsing with regex. Heading styles, bold runs, hyperlinks, horizontal rules. A4/Calibri/1.3 line height. Branded header/footer. Fallback mode for when Claude is unavailable. |
 | `html_generator.py` | HTML rendering | Shared `markdown_to_html()` function + standalone HTML page with inline CSS. Editorial styling (Georgia serif, 680px max-width, accent borders). Used by PDF and EPUB generators. |
 | `pdf_generator.py` | PDF rendering | Takes HTML from `html_generator` and converts to PDF via WeasyPrint. A4, 2.5cm margins, `@media print` rules. |
@@ -268,7 +268,7 @@ Python → Swift:  JSON on stdout
 | **Fonti** | OPML file picker (`.opml`, `.xml`), feed count summary, remove button. File is copied to Application Support. |
 | **Pianificazione** | Hour/minute picker (default: 07:00), "Genera automaticamente" toggle, "Avvia al login" toggle (via `SMAppService`) |
 | **Profilo** | Multiline text editor (min 200pt height). Auto-saves on focus loss. No character limit. |
-| **Avanzate** | LLM provider picker (Claude/OpenAI/LM Studio) with conditional config per provider, output format picker (DOCX/PDF/EPUB), output directory, language picker (IT/EN), time window stepper (6-72h) |
+| **Avanzate** | LLM provider picker (Claude/Codex/LM Studio) with conditional config per provider, output format picker (DOCX/PDF/EPUB), output directory, language picker (IT/EN), time window stepper (6-72h) |
 
 ### Data Storage
 
@@ -299,12 +299,12 @@ cd engine
     --output-dir ~/Documents/Specola \
     --language it --hours 24
 
-# With OpenAI
+# With OpenAI Codex CLI (requires OPENAI_API_KEY in env)
 .venv/bin/python specola_engine.py run \
     --opml ~/feeds.opml \
     --profile ~/profile.md \
     --output-dir ~/Documents/Specola \
-    --provider openai --api-key sk-... --model gpt-4o
+    --provider codex --model o3-pro
 
 # With LM Studio (local)
 .venv/bin/python specola_engine.py run \
@@ -325,11 +325,9 @@ Required:
   --output-dir PATH     Directory where output files are saved
 
 LLM Provider:
-  --provider PROVIDER   LLM backend: claude, openai, lmstudio (default: claude)
-  --api-key KEY         API key (required for openai provider)
-  --endpoint URL        Custom API endpoint (openai or lmstudio; defaults to
-                        api.openai.com or localhost:1234 respectively)
-  --model MODEL         Model name (provider-specific, e.g. gpt-4o, llama-3.3-70b)
+  --provider PROVIDER   LLM backend: claude, codex, lmstudio (default: claude)
+  --endpoint URL        Custom API endpoint (lmstudio; default localhost:1234)
+  --model MODEL         Model name (provider-specific, e.g. o3-pro, llama-3.3-70b)
 
 Optional:
   --format FMT          Output format: docx, pdf, epub (default: docx). HTML is always generated.
@@ -443,7 +441,7 @@ specola/
 │   ├── src/
 │   │   ├── feed_fetcher.py         # OPML + RSS + digest
 │   │   ├── prompt_builder.py       # IT/EN prompt templates
-│   │   ├── analyzer.py             # LLM invocation (Claude CLI / OpenAI / LMStudio)
+│   │   ├── analyzer.py             # LLM invocation (Claude CLI / Codex CLI / LMStudio)
 │   │   ├── doc_generator.py        # DOCX renderer
 │   │   ├── html_generator.py       # Markdown → HTML (shared conversion + standalone page)
 │   │   ├── pdf_generator.py        # HTML → PDF via WeasyPrint
@@ -468,7 +466,7 @@ specola/
 
 | Decision | Rationale |
 |----------|-----------|
-| **Multi-provider LLM** | Choose Claude CLI (zero-config), OpenAI API (cloud), or LM Studio (fully offline). Provider abstraction uses stdlib `urllib` — zero new dependencies for HTTP providers. |
+| **Multi-provider LLM** | Choose Claude CLI, OpenAI Codex CLI, or LM Studio (fully offline). Claude and Codex use subprocess (CLI tools), LM Studio uses stdlib `urllib`. Zero new dependencies. |
 | **Native Swift, not Electron** | A menubar app should be invisible when you don't need it. ~15 MB, not ~200 MB. |
 | **Python for the engine** | `feedparser` handles every RSS/Atom edge case. `python-docx` is the only viable DOCX library. Both are battle-tested. |
 | **Two processes, not one** | Clean separation. The engine is testable standalone. The app is pure UI. Neither depends on the other's internals. |
@@ -491,8 +489,8 @@ You need to import an OPML file first. Open Settings (click the menubar icon, th
 ### Claude CLI not found
 If using Claude provider: Specola looks for `claude` in `/usr/local/bin/`, `~/.local/bin/`, `~/.claude/local/`, and the system PATH. If it's installed elsewhere, set the path in Settings > Avanzate > Claude Code CLI.
 
-### OpenAI API errors
-Verify your API key in Settings > Avanzate. Check that the model name is valid (default: `gpt-4o`). API errors are logged to stderr.
+### Codex CLI not found
+Install with `npm install -g @openai/codex`. Codex requires `OPENAI_API_KEY` set in your shell environment (e.g. `export OPENAI_API_KEY=sk-...` in your `.zshrc`).
 
 ### LM Studio not connecting
 Make sure LM Studio is running with the local server enabled (default: `http://localhost:1234`). Load a model in LM Studio before generating. If using a custom port, update the endpoint in Settings > Avanzate.
@@ -505,7 +503,7 @@ bash setup_engine.sh
 ```
 
 ### Briefing shows "Analisi non disponibile"
-The LLM provider failed or timed out. The output still contains the raw feed digest. Check your provider: for Claude, run `echo "test" | claude -p "say hi"`; for OpenAI, verify the API key; for LM Studio, ensure the server is running.
+The LLM provider failed or timed out. The output still contains the raw feed digest. Check your provider: for Claude, run `echo "test" | claude -p "say hi"`; for Codex, run `codex exec "say hi"`; for LM Studio, ensure the server is running.
 
 ### No notification after generation
 Go to System Settings > Notifications > Specola and enable notifications.
@@ -518,4 +516,4 @@ MIT License. See [LICENSE](LICENSE).
 
 ---
 
-*Built with Swift, Python, and [Claude Code](https://claude.ai/claude-code). Supports Claude, OpenAI, and local LLMs via LM Studio.*
+*Built with Swift, Python, and [Claude Code](https://claude.ai/claude-code). Supports Claude, OpenAI Codex, and local LLMs via LM Studio.*
