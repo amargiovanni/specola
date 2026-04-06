@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
@@ -63,7 +64,7 @@ struct OnboardingView: View {
         VStack(spacing: 16) {
             Image(systemName: "binoculars.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.accent)
+                .foregroundStyle(.tint)
                 .padding(.bottom, 8)
 
             Text("Benvenuto in Specola")
@@ -90,7 +91,7 @@ struct OnboardingView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundStyle(.accent)
+                .foregroundStyle(.tint)
                 .frame(width: 28)
             Text(text)
                 .font(.subheadline)
@@ -103,7 +104,7 @@ struct OnboardingView: View {
         VStack(spacing: 16) {
             Image(systemName: "doc.text")
                 .font(.system(size: 36))
-                .foregroundStyle(.accent)
+                .foregroundStyle(.tint)
 
             Text("Importa i tuoi feed")
                 .font(.title2)
@@ -140,7 +141,7 @@ struct OnboardingView: View {
         VStack(spacing: 12) {
             Image(systemName: "person.text.rectangle")
                 .font(.system(size: 36))
-                .foregroundStyle(.accent)
+                .foregroundStyle(.tint)
 
             Text("Il tuo profilo")
                 .font(.title2)
