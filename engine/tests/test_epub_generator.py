@@ -85,3 +85,40 @@ class TestGenerateEpub:
         path = generate_epub(md, "2026-04-05", tmp_output_dir, "it")
         assert Path(path).exists()
         assert Path(path).stat().st_size > 0
+
+
+class TestEpubThemes:
+    def test_dark_theme_creates_file(self, tmp_output_dir):
+        md = "# Title\n\n## Section\n\n- Item 1"
+        path = generate_epub(md, "2026-04-05", tmp_output_dir, "it", theme="dark")
+        assert Path(path).exists()
+        assert Path(path).suffix == ".epub"
+
+    def test_dark_theme_has_dark_css(self, tmp_output_dir):
+        md = "# Title\n\n## Section\n\n- Item 1"
+        path = generate_epub(md, "2026-04-06", tmp_output_dir, "it", theme="dark")
+        with zipfile.ZipFile(path) as zf:
+            for name in zf.namelist():
+                if "style" in name and ".css" in name:
+                    css = zf.read(name).decode()
+                    assert "#1a1a2e" in css  # dark bg
+                    assert "#e0e0e0" in css  # light text
+                    assert "#82b1ff" in css  # light link color
+                    break
+
+    def test_minimal_theme_creates_file(self, tmp_output_dir):
+        md = "# Title\n\n## Section\n\n- Item 1"
+        path = generate_epub(md, "2026-04-07", tmp_output_dir, "it", theme="minimal")
+        assert Path(path).exists()
+
+    def test_default_theme_is_corporate(self, tmp_output_dir):
+        md = "# Title"
+        path = generate_epub(md, "2026-04-08", tmp_output_dir, "it")
+        with zipfile.ZipFile(path) as zf:
+            for name in zf.namelist():
+                if "style" in name and ".css" in name:
+                    css = zf.read(name).decode()
+                    # Corporate CSS has the navy color and red accent
+                    assert "#1a1a2e" in css
+                    assert "#e94560" in css
+                    break

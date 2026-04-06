@@ -27,6 +27,11 @@ final class AppState {
         !isGenerating && SpecolaSettings.hasOPML
     }
 
+    /// Item counts from last 7 entries (oldest first) for the menubar sparkline.
+    var sparklineData: [Int] {
+        Array(history.prefix(7).map(\.itemCount).reversed())
+    }
+
     func loadHistory() {
         let path = SpecolaSettings.historyPath
         guard FileManager.default.fileExists(atPath: path.path) else { return }
@@ -35,6 +40,7 @@ final class AppState {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             history = try decoder.decode([SpecolaEntry].self, from: data)
+            SpotlightService.reindexAll(history: history)
         } catch {
             history = []
         }
@@ -57,6 +63,7 @@ final class AppState {
         }
         saveHistory()
         updateWidgetData()
+        SpotlightService.indexBriefing(entry)
     }
 
     func markAsRead(_ entry: SpecolaEntry) {

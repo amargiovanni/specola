@@ -157,6 +157,7 @@ def run_engine(
     output_format: str = "docx",
     provider: str = "claude",
     endpoint: str | None = None,
+    theme: str = "corporate",
 ) -> None:
     if verbose:
         logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
@@ -235,20 +236,20 @@ def run_engine(
         final_markdown = full_digest
 
     # 5a. Always generate HTML standalone
-    html_path = generate_html(final_markdown, today, output_dir, language)
+    html_path = generate_html(final_markdown, today, output_dir, language, theme=theme)
 
     # 5b. Generate the chosen format
     if category_successes > 0:
         if output_format == "docx":
-            main_path = generate_docx(final_markdown, today, output_dir)
+            main_path = generate_docx(final_markdown, today, output_dir, theme=theme)
         elif output_format == "pdf":
             main_path = generate_pdf(html_path, today, output_dir)
         elif output_format == "epub":
-            main_path = generate_epub(final_markdown, today, output_dir, language)
+            main_path = generate_epub(final_markdown, today, output_dir, language, theme=theme)
         else:
             main_path = html_path
     else:
-        main_path = generate_fallback_docx(full_digest, today, output_dir)
+        main_path = generate_fallback_docx(full_digest, today, output_dir, theme=theme)
 
     # 5c. Regenerate portal index
     portal_path = regenerate_portal_index(output_dir, language)
@@ -281,6 +282,9 @@ def main() -> None:
     run_parser.add_argument("--format", default="docx", choices=["docx", "pdf", "epub"])
     run_parser.add_argument("--max-items", type=int, default=30)
     run_parser.add_argument("--model", default=None)
+    run_parser.add_argument("--theme", default="corporate",
+                            choices=["corporate", "minimal", "dark"],
+                            help="Visual theme for output documents")
     run_parser.add_argument("--provider", default="claude",
                             choices=["claude", "codex", "lmstudio"])
     run_parser.add_argument("--endpoint", default=None,
@@ -304,6 +308,7 @@ def main() -> None:
             output_format=args.format,
             provider=args.provider,
             endpoint=args.endpoint,
+            theme=args.theme,
         )
 
 

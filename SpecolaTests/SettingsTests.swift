@@ -235,4 +235,21 @@ final class SettingsTests: XCTestCase {
         XCTAssertEqual(SpecolaSettings.lmstudioModel, "llama-3.3-70b")
         UserDefaults.standard.removeObject(forKey: "lmstudioModel")
     }
+
+    // MARK: - Theme
+
+    func testDefaultTheme() {
+        UserDefaults.standard.removeObject(forKey: "theme")
+        XCTAssertEqual(SpecolaSettings.theme, "corporate")
+    }
+
+    func testSetAndGetTheme() {
+        SpecolaSettings.theme = "dark"
+        XCTAssertEqual(SpecolaSettings.theme, "dark")
+        SpecolaSettings.theme = "minimal"
+        XCTAssertEqual(SpecolaSettings.theme, "minimal")
+        SpecolaSettings.theme = "corporate"
+        XCTAssertEqual(SpecolaSettings.theme, "corporate")
+        UserDefaults.standard.removeObject(forKey: "theme")
+    }
 }

@@ -10,6 +10,48 @@ _LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 _NUMBERED_RE = re.compile(r"^\d+\.\s+")
 _HR_RE = re.compile(r"^-{3,}$")
 
+_THEMES: dict[str, dict[str, str]] = {
+    "corporate": {
+        "body_bg": "#ffffff",
+        "body_color": "#374151",
+        "h1_color": "#1a1a2e",
+        "h2_color": "#16213e",
+        "h3_color": "#0f3460",
+        "accent": "#e94560",
+        "link_color": "#2563eb",
+        "strong_color": "#16213e",
+        "border_color": "#d1d5db",
+        "header_color": "#6b7280",
+        "footer_color": "#6b7280",
+    },
+    "minimal": {
+        "body_bg": "#fafaf9",
+        "body_color": "#1a1a1a",
+        "h1_color": "#1a1a1a",
+        "h2_color": "#1a1a1a",
+        "h3_color": "#1a1a1a",
+        "accent": "#a3a3a3",
+        "link_color": "#1e3a5f",
+        "strong_color": "#1a1a1a",
+        "border_color": "#d4d4d4",
+        "header_color": "#737373",
+        "footer_color": "#737373",
+    },
+    "dark": {
+        "body_bg": "#1a1a2e",
+        "body_color": "#e0e0e0",
+        "h1_color": "#e0e0e0",
+        "h2_color": "#c0c0d0",
+        "h3_color": "#a0a0b8",
+        "accent": "#e94560",
+        "link_color": "#82b1ff",
+        "strong_color": "#ffffff",
+        "border_color": "#3a3a5e",
+        "header_color": "#8888aa",
+        "footer_color": "#8888aa",
+    },
+}
+
 _HTML_TEMPLATE = """\
 <!DOCTYPE html>
 <html lang="{lang}">
@@ -25,8 +67,8 @@ _HTML_TEMPLATE = """\
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 11pt;
     line-height: 1.6;
-    color: #374151;
-    background: #ffffff;
+    color: {theme_body_color};
+    background: {theme_body_bg};
     max-width: 680px;
     margin: 0 auto;
     padding: 2.5cm 1.5cm;
@@ -36,27 +78,27 @@ _HTML_TEMPLATE = """\
   h1 {{
     font-size: 22pt;
     font-weight: bold;
-    color: #1a1a2e;
+    color: {theme_h1_color};
     margin-top: 0;
     margin-bottom: 0.5em;
     padding-bottom: 0.25em;
-    border-bottom: 3px solid #e94560;
+    border-bottom: 3px solid {theme_accent};
   }}
 
   h2 {{
     font-size: 14pt;
     font-weight: bold;
-    color: #16213e;
+    color: {theme_h2_color};
     margin-top: 1.4em;
     margin-bottom: 0.4em;
     padding-left: 0.6em;
-    border-left: 4px solid #e94560;
+    border-left: 4px solid {theme_accent};
   }}
 
   h3 {{
     font-size: 12pt;
     font-weight: bold;
-    color: #0f3460;
+    color: {theme_h3_color};
     margin-top: 1em;
     margin-bottom: 0.3em;
   }}
@@ -77,17 +119,17 @@ _HTML_TEMPLATE = """\
 
   /* Inline */
   strong {{
-    color: #16213e;
+    color: {theme_strong_color};
   }}
 
   a {{
-    color: #2563eb;
+    color: {theme_link_color};
     text-decoration: underline;
   }}
 
   hr {{
     border: none;
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid {theme_border_color};
     margin: 1.5em 0;
   }}
 
@@ -97,24 +139,24 @@ _HTML_TEMPLATE = """\
     justify-content: space-between;
     align-items: baseline;
     font-size: 8pt;
-    color: #6b7280;
+    color: {theme_header_color};
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #d1d5db;
+    border-bottom: 1px solid {theme_border_color};
     padding-bottom: 0.4em;
     margin-bottom: 1.5em;
   }}
 
   .page-header .brand {{
     font-weight: bold;
-    color: #e94560;
+    color: {theme_accent};
   }}
 
   .page-footer {{
     font-size: 8pt;
-    color: #6b7280;
+    color: {theme_footer_color};
     text-align: center;
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid {theme_border_color};
     padding-top: 0.4em;
     margin-top: 2em;
   }}
@@ -140,7 +182,7 @@ _HTML_TEMPLATE = """\
     }}
 
     a {{
-      color: #1a1a2e;
+      color: {theme_h1_color};
       text-decoration: none;
     }}
 
@@ -241,6 +283,7 @@ def generate_html(
     date: str,
     output_dir: str | Path,
     language: str = "it",
+    theme: str = "corporate",
 ) -> str:
     """Generate a standalone HTML file from markdown. Returns output file path."""
     output_dir = Path(output_dir)
@@ -250,11 +293,24 @@ def generate_html(
     date_display = _display_date(date)
     body = markdown_to_html(markdown)
 
+    theme_vars = _THEMES.get(theme, _THEMES["corporate"])
+
     html = _HTML_TEMPLATE.format(
         lang=language,
         date=date,
         date_display=date_display,
         body=body,
+        theme_body_bg=theme_vars["body_bg"],
+        theme_body_color=theme_vars["body_color"],
+        theme_h1_color=theme_vars["h1_color"],
+        theme_h2_color=theme_vars["h2_color"],
+        theme_h3_color=theme_vars["h3_color"],
+        theme_accent=theme_vars["accent"],
+        theme_link_color=theme_vars["link_color"],
+        theme_strong_color=theme_vars["strong_color"],
+        theme_border_color=theme_vars["border_color"],
+        theme_header_color=theme_vars["header_color"],
+        theme_footer_color=theme_vars["footer_color"],
     )
 
     output_path.write_text(html, encoding="utf-8")

@@ -176,4 +176,38 @@ final class AppStateTests: XCTestCase {
         state.lastError = nil
         XCTAssertNil(state.lastError)
     }
+
+    // MARK: - Sparkline Data
+
+    func testSparklineDataEmpty() {
+        let state = AppState()
+        XCTAssertEqual(state.sparklineData, [])
+    }
+
+    func testSparklineDataReversesHistoryOrder() {
+        let state = AppState()
+        state.history = [
+            SpecolaEntry(id: "1", date: Date(), path: "", feedCount: 0, itemCount: 30, read: false),
+            SpecolaEntry(id: "2", date: Date(), path: "", feedCount: 0, itemCount: 20, read: false),
+            SpecolaEntry(id: "3", date: Date(), path: "", feedCount: 0, itemCount: 10, read: false),
+        ]
+        // History is newest-first, sparkline should be oldest-first
+        XCTAssertEqual(state.sparklineData, [10, 20, 30])
+    }
+
+    func testSparklineDataMaxSeven() {
+        let state = AppState()
+        state.history = (0..<10).map { i in
+            SpecolaEntry(id: "\(i)", date: Date(), path: "", feedCount: 0, itemCount: i * 5, read: false)
+        }
+        XCTAssertEqual(state.sparklineData.count, 7)
+    }
+
+    func testSparklineDataSingleEntry() {
+        let state = AppState()
+        state.history = [
+            SpecolaEntry(id: "1", date: Date(), path: "", feedCount: 0, itemCount: 42, read: false),
+        ]
+        XCTAssertEqual(state.sparklineData, [42])
+    }
 }

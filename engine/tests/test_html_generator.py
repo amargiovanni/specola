@@ -336,3 +336,43 @@ class TestGenerateHtml:
         path = generate_html("# T", "2026-04-05", tmp_output_dir)
         content = Path(path).read_text()
         assert "size: A4" in content
+
+
+class TestHtmlThemes:
+    def test_default_theme_is_corporate(self, tmp_output_dir):
+        path_default = generate_html("# T", "2026-04-05", tmp_output_dir)
+        content_default = Path(path_default).read_text()
+        # Corporate theme uses navy h1 and red accent
+        assert "#1a1a2e" in content_default
+        assert "#e94560" in content_default
+
+    def test_corporate_theme_colors(self, tmp_output_dir):
+        path = generate_html("# T", "2026-04-05", tmp_output_dir, theme="corporate")
+        content = Path(path).read_text()
+        assert "#1a1a2e" in content  # h1_color / body navy
+        assert "#e94560" in content  # accent
+        assert "#2563eb" in content  # link_color
+        assert "#ffffff" in content  # body_bg
+
+    def test_minimal_theme_colors(self, tmp_output_dir):
+        path = generate_html("# T", "2026-04-06", tmp_output_dir, theme="minimal")
+        content = Path(path).read_text()
+        assert "#fafaf9" in content  # body_bg warm gray
+        assert "#1e3a5f" in content  # link_color dark blue
+        assert "#a3a3a3" in content  # accent gray
+        # Should NOT have corporate red accent
+        assert "#e94560" not in content
+
+    def test_dark_theme_colors(self, tmp_output_dir):
+        path = generate_html("# T", "2026-04-07", tmp_output_dir, theme="dark")
+        content = Path(path).read_text()
+        assert "#1a1a2e" in content  # body_bg dark
+        assert "#e0e0e0" in content  # body_color light text
+        assert "#82b1ff" in content  # link_color light blue
+        assert "#e94560" in content  # accent muted red
+
+    def test_unknown_theme_falls_back_to_corporate(self, tmp_output_dir):
+        path = generate_html("# T", "2026-04-08", tmp_output_dir, theme="nonexistent")
+        content = Path(path).read_text()
+        # Should use corporate colors
+        assert "#2563eb" in content  # corporate link_color
