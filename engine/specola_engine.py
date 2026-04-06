@@ -18,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.feed_fetcher import parse_opml, fetch_feeds, format_digest
+from src.prefilter import prefilter_items
 from src.prompt_builder import build_category_prompt, build_synthesis_prompt
 from src.analyzer import analyze_with_claude, analyze
 from src.doc_generator import generate_docx, generate_fallback_docx
@@ -31,6 +32,9 @@ logger = logging.getLogger("specola")
 # Timeout per call: 120s per category, 180s for synthesis
 CATEGORY_TIMEOUT = 120
 SYNTHESIS_TIMEOUT = 180
+
+# Categories with fewer items than this get batched into a single LLM call
+_BATCH_THRESHOLD = 5
 
 _SAFE_FILENAME_RE = __import__("re").compile(r"[^\w\-]+")
 
@@ -51,22 +55,36 @@ def _analyze_categories(
 ) -> tuple[dict[str, str], int]:
     """Phase 1: Analyze each category independently.
 
+    Small categories (< _BATCH_THRESHOLD items) are batched into a single
+    LLM call to avoid paying the prompt overhead (profile + instructions)
+    for each tiny category. Uses compact digest format to minimize tokens.
+
     Returns (category_analyses, success_count).
     """
+    # Split into big (individual call) and small (batched call) categories
+    big_cats: dict[str, list[dict]] = {}
+    small_cats: dict[str, list[dict]] = {}
+    for cat, items in items_by_category.items():
+        if len(items) >= _BATCH_THRESHOLD:
+            big_cats[cat] = items
+        else:
+            small_cats[cat] = items
+
     results = {}
-    total = len(items_by_category)
     success_count = 0
+    total_calls = len(big_cats) + (1 if small_cats else 0)
+    call_idx = 0
 
-    for i, (category, items) in enumerate(items_by_category.items(), 1):
-        logger.info("  [%d/%d] Analyzing: %s (%d items)", i, total, category, len(items))
+    # ── Individual calls for large categories ──
+    for category, items in big_cats.items():
+        call_idx += 1
+        logger.info("  [%d/%d] Analyzing: %s (%d items)", call_idx, total_calls, category, len(items))
 
-        # Build mini-digest for this category
-        mini_digest = format_digest({category: items}, date.today().isoformat())
+        mini_digest = format_digest({category: items}, date.today().isoformat(), compact=True)
         safe_name = _SAFE_FILENAME_RE.sub("_", category).strip("_")
         digest_path = work_dir / f"cat_{safe_name}_{today}.md"
         digest_path.write_text(mini_digest, encoding="utf-8")
 
-        # Build prompt and call LLM
         prompt = build_category_prompt(profile_text, language, category)
         analysis = analyze(
             digest_path, prompt, provider=provider, model=model,
@@ -76,17 +94,98 @@ def _analyze_categories(
         if analysis:
             results[category] = analysis.strip()
             success_count += 1
-            logger.info("  [%d/%d] %s: OK", i, total, category)
+            logger.info("  [%d/%d] %s: OK", call_idx, total_calls, category)
         else:
-            # Fallback: include raw items as plain text
             raw = "\n".join(
                 f"- {item['title']} ({item['source']}) — {item['summary']}"
                 for item in items
             )
             results[category] = raw
-            logger.warning("  [%d/%d] %s: LLM failed, using raw items", i, total, category)
+            logger.warning("  [%d/%d] %s: LLM failed, using raw items", call_idx, total_calls, category)
+
+    # ── Single batched call for small categories ──
+    if small_cats:
+        call_idx += 1
+        small_total = sum(len(v) for v in small_cats.values())
+        cat_names = ", ".join(small_cats.keys())
+        logger.info(
+            "  [%d/%d] Batched analysis: %d small categories (%d items): %s",
+            call_idx, total_calls, len(small_cats), small_total, cat_names,
+        )
+
+        # Build a combined digest with all small categories
+        batched_digest = format_digest(small_cats, date.today().isoformat(), compact=True)
+        digest_path = work_dir / f"cat_batched_{today}.md"
+        digest_path.write_text(batched_digest, encoding="utf-8")
+
+        # Build a combined prompt listing all batched category names
+        batch_label = " + ".join(small_cats.keys())
+        prompt = build_category_prompt(profile_text, language, batch_label)
+        analysis = analyze(
+            digest_path, prompt, provider=provider, model=model,
+            timeout=CATEGORY_TIMEOUT, endpoint=endpoint,
+        )
+
+        if analysis:
+            # Store the combined analysis under each category key so synthesis
+            # can reference them. We split later if possible, else store as one block.
+            _split_batched_analysis(analysis, small_cats.keys(), results)
+            success_count += 1
+            logger.info("  [%d/%d] Batched: OK", call_idx, total_calls)
+        else:
+            for cat, items in small_cats.items():
+                raw = "\n".join(
+                    f"- {item['title']} ({item['source']}) — {item['summary']}"
+                    for item in items
+                )
+                results[cat] = raw
+            logger.warning("  [%d/%d] Batched: LLM failed, using raw items", call_idx, total_calls)
 
     return results, success_count
+
+
+def _split_batched_analysis(
+    analysis: str,
+    category_names: "list[str] | dict_keys",
+    results: dict[str, str],
+) -> None:
+    """Try to split a batched LLM analysis back into per-category sections.
+
+    Looks for ## Category headers in the output. If splitting fails,
+    stores the entire analysis under a combined key.
+    """
+    import re
+    cat_list = list(category_names)
+    sections: dict[str, list[str]] = {}
+    current_cat = None
+
+    for line in analysis.strip().splitlines():
+        # Match ## headers — try exact match with known category names
+        if line.startswith("## "):
+            header = line[3:].strip()
+            matched = None
+            for cat in cat_list:
+                if cat.lower() in header.lower() or header.lower() in cat.lower():
+                    matched = cat
+                    break
+            if matched:
+                current_cat = matched
+                sections[current_cat] = []
+                continue
+        if current_cat is not None:
+            sections.setdefault(current_cat, []).append(line)
+
+    if sections:
+        for cat, lines in sections.items():
+            results[cat] = "\n".join(lines).strip()
+        # Any categories not found in the split get the full analysis
+        for cat in cat_list:
+            if cat not in results:
+                results[cat] = analysis.strip()
+    else:
+        # Could not split — store under combined key
+        combined_key = " / ".join(cat_list)
+        results[combined_key] = analysis.strip()
 
 
 def _synthesize(
@@ -196,7 +295,7 @@ def run_engine(
         _output_json({"status": "error", "message": "Nessun articolo trovato nel periodo selezionato"})
         return
 
-    # Save full digest for fallback
+    # Save full digest for fallback (verbose format)
     work_dir = Path(__file__).parent / ".work"
     work_dir.mkdir(exist_ok=True)
     full_digest = format_digest(items_by_category, today_date)
@@ -205,13 +304,26 @@ def run_engine(
 
     profile_text = Path(profile).read_text(encoding="utf-8")
 
+    # 2b. Pre-filter: local relevance scoring, dedup, summary truncation
+    filtered = prefilter_items(items_by_category, profile_text)
+    filtered_count = sum(len(items) for items in filtered.values())
+    logger.info(
+        "Pre-filter: %d → %d items (%.0f%% saved before LLM)",
+        item_count, filtered_count,
+        (1 - filtered_count / max(item_count, 1)) * 100,
+    )
+
+    if filtered_count == 0:
+        logger.warning("Pre-filter removed all items, falling back to unfiltered")
+        filtered = items_by_category
+
     # 3. Phase 1 — Per-category analysis
-    logger.info("Phase 1: Analyzing %d categories...", len(items_by_category))
+    logger.info("Phase 1: Analyzing %d categories...", len(filtered))
     category_analyses, category_successes = _analyze_categories(
-        items_by_category, profile_text, language, work_dir, today, model,
+        filtered, profile_text, language, work_dir, today, model,
         provider=provider, endpoint=endpoint,
     )
-    logger.info("Phase 1 done: %d/%d categories analyzed by %s", category_successes, len(items_by_category), provider)
+    logger.info("Phase 1 done: %d/%d categories analyzed by %s", category_successes, len(filtered), provider)
 
     # 4. Phase 2 — Synthesis (only if we have at least some Claude analyses)
     synthesis = None
@@ -229,6 +341,7 @@ def run_engine(
         logger.warning("Phase 2 skipped: no successful category analyses")
 
     # 5. Assemble final markdown and generate outputs
+    # Use compact format for the synthesis input as well
     if category_successes > 0:
         final_markdown = _assemble_briefing(synthesis, category_analyses, today_date)
     else:

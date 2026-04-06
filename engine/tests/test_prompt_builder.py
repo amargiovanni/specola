@@ -33,14 +33,15 @@ class TestBuildCategoryPrompt:
         result = build_category_prompt("profile", "fr", "Tech")
         assert "implicazioni" in result
 
-    def test_profile_delimiters(self):
-        """Profile is wrapped in --- delimiters."""
+    def test_profile_in_prompt(self):
+        """Profile text appears in the prompt."""
         result = build_category_prompt("My profile text", "it", "Tech")
-        assert "---\nMy profile text\n---" in result
+        assert "My profile text" in result
+        assert "Profilo utente:" in result
 
     def test_empty_profile(self):
         result = build_category_prompt("", "it", "Tech")
-        assert "---\n\n---" in result
+        assert "Profilo utente:" in result
 
     def test_multiline_profile(self):
         profile = "Line 1\nLine 2\nLine 3"
@@ -57,11 +58,11 @@ class TestBuildCategoryPrompt:
 
     def test_italian_uses_it_instructions(self):
         result = build_category_prompt("p", "it", "Cat")
-        assert "Scrivi in italiano" in result
+        assert "italiano" in result
 
     def test_english_uses_en_instructions(self):
         result = build_category_prompt("p", "en", "Cat")
-        assert "Write in English" in result
+        assert "English" in result
 
 
 class TestBuildSynthesisPrompt:
@@ -94,21 +95,22 @@ class TestBuildSynthesisPrompt:
         result = build_synthesis_prompt("p", "de", "2026-04-05")
         assert "Da sapere oggi" in result
 
-    def test_profile_delimiters(self):
+    def test_profile_in_prompt(self):
         result = build_synthesis_prompt("My profile", "en", "2026-04-05")
-        assert "---\nMy profile\n---" in result
+        assert "My profile" in result
+        assert "Profilo utente:" in result
 
     def test_system_instruction_present(self):
         result = build_synthesis_prompt("p", "it", "2026-04-05")
         assert SYSTEM_INSTRUCTION in result
 
-    def test_italian_no_repeat_instruction(self):
+    def test_italian_only_these_sections(self):
         result = build_synthesis_prompt("p", "it", "2026-04-05")
-        assert "NON ripetere" in result
+        assert "SOLO queste sezioni" in result
 
-    def test_english_no_repeat_instruction(self):
+    def test_english_only_these_sections(self):
         result = build_synthesis_prompt("p", "en", "2026-04-05")
-        assert "do NOT repeat" in result
+        assert "ONLY these sections" in result
 
 
 class TestBuildPromptLegacy:

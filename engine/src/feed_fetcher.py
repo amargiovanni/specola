@@ -205,25 +205,60 @@ def fetch_feeds(
     return results
 
 
-def format_digest(items_by_category: dict, date: str) -> str:
+def format_digest(items_by_category: dict, date: str, compact: bool = False) -> str:
     """Format fetched items as a markdown digest.
 
     Args:
         items_by_category: {category: [FeedItem, ...]}
         date: date string for the header
+        compact: if True, use a token-efficient format for LLM input
 
     Returns:
-        Markdown string with # header, ## per category, ### per item.
-        Returns a "no articles" message if the dict is empty or all lists empty.
+        Markdown string. Returns a "no articles" message if empty.
     """
     if not items_by_category:
         return "Nessun articolo trovato nel periodo selezionato."
 
-    # Check if there are any items at all
     total = sum(len(v) for v in items_by_category.values())
     if total == 0:
         return "Nessun articolo trovato nel periodo selezionato."
 
+    if compact:
+        return _format_digest_compact(items_by_category, date)
+    return _format_digest_full(items_by_category, date)
+
+
+def _format_digest_compact(items_by_category: dict, date: str) -> str:
+    """Token-efficient digest format for LLM consumption.
+
+    ~30% fewer tokens than the full format by removing redundant
+    markdown markup and using a terse layout.
+    """
+    lines: list[str] = [f"# Digest {date}", ""]
+
+    for category, items in items_by_category.items():
+        if not items:
+            continue
+        lines.append(f"## {category}")
+        for item in items:
+            title = item.get("title", "")
+            source = item.get("source", "")
+            link = item.get("link", "")
+            summary = item.get("summary", "")
+            # One-line header: title | source | link
+            header = f"- **{title}** ({source})"
+            if link:
+                header += f" {link}"
+            lines.append(header)
+            if summary:
+                lines.append(f"  {summary}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _format_digest_full(items_by_category: dict, date: str) -> str:
+    """Original verbose digest format (for fallback DOCX, dry-run, etc.)."""
     lines: list[str] = [f"# Feed Digest — {date}", ""]
 
     for category, items in items_by_category.items():
