@@ -21,6 +21,10 @@ from src.feed_fetcher import parse_opml, fetch_feeds, format_digest
 from src.prompt_builder import build_category_prompt, build_synthesis_prompt
 from src.analyzer import analyze_with_claude
 from src.doc_generator import generate_docx, generate_fallback_docx
+from src.html_generator import generate_html
+from src.pdf_generator import generate_pdf
+from src.epub_generator import generate_epub
+from src.portal_generator import regenerate_portal_index, extract_highlights
 
 logger = logging.getLogger("specola")
 
@@ -144,6 +148,7 @@ def run_engine(
     model: "str | None",
     dry_run: bool,
     verbose: bool,
+    output_format: str = "docx",
 ) -> None:
     if verbose:
         logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
@@ -212,19 +217,43 @@ def run_engine(
     else:
         logger.warning("Phase 2 skipped: no successful category analyses")
 
-    # 5. Assemble final markdown and generate DOCX
+    # 5. Assemble final markdown and generate outputs
     if category_successes > 0:
         final_markdown = _assemble_briefing(synthesis, category_analyses, today_date)
-        output_path = generate_docx(final_markdown, today, output_dir)
     else:
-        logger.warning("All analyses failed, generating fallback DOCX")
-        output_path = generate_fallback_docx(full_digest, today, output_dir)
+        logger.warning("All analyses failed, using raw digest")
+        final_markdown = full_digest
+
+    # 5a. Always generate HTML standalone
+    html_path = generate_html(final_markdown, today, output_dir, language)
+
+    # 5b. Generate the chosen format
+    if category_successes > 0:
+        if output_format == "docx":
+            main_path = generate_docx(final_markdown, today, output_dir)
+        elif output_format == "pdf":
+            main_path = generate_pdf(html_path, today, output_dir)
+        elif output_format == "epub":
+            main_path = generate_epub(final_markdown, today, output_dir, language)
+        else:
+            main_path = html_path
+    else:
+        main_path = generate_fallback_docx(full_digest, today, output_dir)
+
+    # 5c. Regenerate portal index
+    portal_path = regenerate_portal_index(output_dir, language)
+
+    # 5d. Extract highlights for widget
+    highlights = extract_highlights(final_markdown)
 
     _output_json({
         "status": "ok",
-        "output_path": output_path,
+        "output_path": main_path,
+        "html_path": html_path,
+        "portal_path": portal_path,
         "feed_count": feed_count,
         "item_count": item_count,
+        "highlights": highlights,
     })
 
 
@@ -239,6 +268,7 @@ def main() -> None:
     run_parser.add_argument("--output-dir", required=True, help="Output directory for DOCX")
     run_parser.add_argument("--hours", type=int, default=24)
     run_parser.add_argument("--language", default="it", choices=["it", "en"])
+    run_parser.add_argument("--format", default="docx", choices=["docx", "pdf", "epub"])
     run_parser.add_argument("--max-items", type=int, default=30)
     run_parser.add_argument("--model", default=None)
     run_parser.add_argument("--dry-run", action="store_true")
@@ -257,6 +287,7 @@ def main() -> None:
             model=args.model,
             dry_run=args.dry_run,
             verbose=args.verbose,
+            output_format=args.format,
         )
 
 
