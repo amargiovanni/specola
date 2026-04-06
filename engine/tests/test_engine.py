@@ -574,6 +574,126 @@ class TestRunEngineProviders:
             assert kwargs["provider"] == "claude"
 
 
+class TestAnalyzeCategoriesDualModel:
+    """Test dual-model support: --category-model for phase 1, --model for phase 2."""
+
+    @patch("specola_engine.analyze")
+    def test_category_model_used_for_phase1(self, mock_analyze, tmp_path):
+        mock_analyze.return_value = "result"
+        items = {"Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}]}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", "sonnet",
+                            category_model="haiku")
+        _, kwargs = mock_analyze.call_args
+        assert kwargs["model"] == "haiku"
+
+    @patch("specola_engine.analyze")
+    def test_falls_back_to_model_when_no_category_model(self, mock_analyze, tmp_path):
+        mock_analyze.return_value = "result"
+        items = {"Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}]}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", "sonnet",
+                            category_model=None)
+        _, kwargs = mock_analyze.call_args
+        assert kwargs["model"] == "sonnet"
+
+    @patch("specola_engine.analyze")
+    def test_compact_profile_used_in_prompt(self, mock_analyze, tmp_path):
+        mock_analyze.return_value = "result"
+        items = {"Tech": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}]}
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _analyze_categories(items, "Full profile text", "it", work_dir, "2026-04-05", None,
+                            compact_profile="Keywords: fintech, AWS")
+        # The prompt (second positional arg) should contain compact profile, not full
+        call_args = mock_analyze.call_args
+        prompt = call_args[0][1]  # positional arg 1 = prompt string
+        assert "Keywords: fintech, AWS" in prompt
+        assert "Full profile text" not in prompt
+
+    @patch("specola_engine.analyze")
+    def test_batched_small_cats_use_category_model(self, mock_analyze, tmp_path):
+        """Small categories (<5 items) batched together should use category_model."""
+        mock_analyze.return_value = "## Cat1\nresult1\n## Cat2\nresult2"
+        items = {
+            "Cat1": [{"title": "A", "source": "F", "summary": "S", "link": "", "published": ""}],
+            "Cat2": [{"title": "B", "source": "G", "summary": "S", "link": "", "published": ""}],
+        }
+        work_dir = tmp_path / ".work"
+        work_dir.mkdir()
+        _analyze_categories(items, "profile", "it", work_dir, "2026-04-05", "sonnet",
+                            category_model="haiku")
+        _, kwargs = mock_analyze.call_args
+        assert kwargs["model"] == "haiku"
+
+
+class TestDualModelEndToEnd:
+    """Test that run_engine wires category_model through the pipeline."""
+
+    @patch("specola_engine.generate_docx")
+    @patch("specola_engine.analyze")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_category_model_phase1_main_model_phase2(self, mock_parse, mock_fetch, mock_analyze, mock_docx, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("CTO fintech TypeScript AWS")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {
+            "Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]
+        }
+        mock_analyze.side_effect = ["category analysis", "## Da sapere oggi\n- Point"]
+        mock_docx.return_value = str(output_dir / "Specola.docx")
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model="sonnet", dry_run=False,
+                   verbose=False, category_model="haiku")
+
+        # Phase 1 call should use category_model
+        phase1_kwargs = mock_analyze.call_args_list[0][1]
+        assert phase1_kwargs["model"] == "haiku"
+
+        # Phase 2 (synthesis) call should use main model
+        phase2_kwargs = mock_analyze.call_args_list[1][1]
+        assert phase2_kwargs["model"] == "sonnet"
+
+    @patch("specola_engine.generate_docx")
+    @patch("specola_engine.analyze")
+    @patch("specola_engine.fetch_feeds")
+    @patch("specola_engine.parse_opml")
+    def test_condensed_profile_in_phase1_full_in_phase2(self, mock_parse, mock_fetch, mock_analyze, mock_docx, tmp_path, capsys):
+        opml = tmp_path / "test.opml"
+        opml.write_text('<opml version="2.0"><head/><body/></opml>')
+        profile = tmp_path / "profile.md"
+        profile.write_text("Sono CTO di una startup fintech a Milano. Stack: TypeScript, AWS.")
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        mock_parse.return_value = {"Tech": [{"title": "F", "xmlUrl": "https://x.com/rss", "htmlUrl": ""}]}
+        mock_fetch.return_value = {
+            "Tech": [{"title": "A", "link": "", "published": "2026-04-05 09:00", "summary": "S", "source": "F"}]
+        }
+        mock_analyze.side_effect = ["category analysis", "## Da sapere oggi\n- Point"]
+        mock_docx.return_value = str(output_dir / "Specola.docx")
+
+        run_engine(opml=str(opml), profile=str(profile), output_dir=str(output_dir),
+                   hours=24, language="it", max_items=30, model=None, dry_run=False, verbose=False)
+
+        # Phase 1: prompt should contain "Keywords:" (condensed profile)
+        phase1_prompt = mock_analyze.call_args_list[0][0][1]
+        assert "Keywords:" in phase1_prompt
+
+        # Phase 2: prompt should contain full profile text
+        phase2_prompt = mock_analyze.call_args_list[1][0][1]
+        assert "Sono CTO di una startup fintech a Milano" in phase2_prompt
+
+
 class TestAnalyzeCategoriesProvider:
     """Test _analyze_categories passes provider args through."""
 
