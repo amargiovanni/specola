@@ -2,7 +2,7 @@
 
 **Your daily observatory on what matters.**
 
-Specola is a native macOS menubar app that fetches your RSS feeds every morning, has Claude analyze and prioritize them based on your professional profile, and delivers a polished DOCX briefing — your personal intelligence report, ready before your first coffee.
+Specola is a native macOS menubar app that fetches your RSS feeds every morning, has Claude analyze and prioritize them based on your professional profile, and delivers a polished briefing in your chosen format (DOCX, PDF, or EPUB) — your personal intelligence report, ready before your first coffee. Every briefing is also published as a standalone HTML page in a browsable portal archive, and today's highlights appear in a Notification Center widget.
 
 The name comes from *specola*: the observatory tower from which astronomers scan the horizon.
 
@@ -11,21 +11,22 @@ The name comes from *specola*: the observatory tower from which astronomers scan
 ## How It Works
 
 ```
-    OPML feeds          Claude Code CLI           DOCX briefing
+    OPML feeds          Claude Code CLI           Your briefing
    ┌──────────┐        ┌──────────────┐        ┌──────────────┐
-   │ 200+ RSS │───────▶│  AI analysis │───────▶│  Structured  │
-   │  sources  │  fetch │  & ranking   │ render │   report     │
+   │ 200+ RSS │───────▶│  AI analysis │───────▶│  DOCX / PDF  │
+   │  sources  │  fetch │  & ranking   │ render │  / EPUB      │
    └──────────┘        └──────────────┘        └──────────────┘
-         │                     │                       │
-         │              prioritized by            opens in Word,
-     concurrent         your profile              Pages, or any
-     fetching           and interests             DOCX reader
+         │                     │                  + HTML portal
+     concurrent         prioritized by            + NC widget
+     fetching           your profile              + standalone HTML
 ```
 
 1. **You configure** your RSS feeds (OPML file) and describe your professional profile in plain text
 2. **Every day at your chosen time**, Specola fetches all feeds concurrently (up to 20 threads)
 3. **Claude Code CLI** analyzes the full digest and produces a deep, structured briefing tailored to your role, stack, and interests
-4. **A premium DOCX file** lands in your Documents folder — professionally formatted, with clickable source links, ready to read, share, or archive
+4. **A premium report** (DOCX, PDF, or EPUB — your choice) lands in your Documents folder — professionally formatted, with clickable source links, ready to read, share, or archive
+5. **An HTML portal** is always generated alongside — a browsable archive of all your briefings, openable in any browser
+6. **A Notification Center widget** shows today's key highlights at a glance
 
 No API keys needed. No cloud service. No subscription. Just the Claude Code CLI on your Mac.
 
@@ -45,18 +46,45 @@ Each briefing ("Specola") is a multi-page document with in-depth analysis, not a
 | **Da leggere con calma** | Long reads worth your time, with a reason *why* for each |
 | **Spunti** | 3-5 concrete ideas for posts, reflections, or actions inspired by the day's news |
 
-### DOCX Formatting
+### Output Formats
 
-The output is a professionally typeset document, not a raw text dump:
+Choose your preferred format in Settings — each is professionally typeset, not a raw text dump:
+
+| Format | Details |
+|--------|---------|
+| **DOCX** | Calibri typography, branded headers with diamond accent, section headers with colored left border, clickable hyperlinks, page numbers. Opens in Word, Pages, or Preview. |
+| **PDF** | A4 with 2.5cm margins, print-ready layout via WeasyPrint. Same editorial styling as the HTML version. |
+| **EPUB** | Reflowable e-book with embedded CSS. Opens in Apple Books or any EPUB reader. |
+| **HTML** | Always generated alongside your chosen format. Standalone page with editorial styling (Georgia serif, max-width 680px, accent borders). |
+
+### HTML Portal
+
+Every time a briefing is generated, Specola also produces a static `index.html` in your output directory — a browsable archive of all your briefings:
+
+- Today's briefing highlighted with an accent border
+- Each card shows date, first 3 highlights, and feed/item count
+- Click any card to open the full standalone HTML briefing
+- Pure HTML + CSS, no JavaScript required — works as a local `file://` page
+
+### Notification Center Widget
+
+A native macOS widget (medium or large) shows today's highlights at a glance:
+
+- "Da sapere oggi" bullet points from the latest briefing
+- Unread count badge
+- Tap to open the full briefing in your default app
+- Updates automatically after each generation — no polling
+
+### Document Styling
+
+All formats share the Specola design language:
 
 - **Hero title** with accent underline in the Specola brand red
-- **Section headers** with colored left border accents and bottom rules
-- **Clickable hyperlinks** to every source article (blue, underlined, working in Word/Pages/Preview)
-- **Branded header** with diamond accent, "SPECOLA" branding, and date
-- **Clean typography** — Calibri, refined spacing, dark text on white, 1.3 line height
-- **Horizontal separators** between major sections
-- **Bold emphasis** in dark blue for key terms and news titles
-- **Page numbers** in a subtle footer with top rule
+- **Section headers** with colored left border accents
+- **Clickable hyperlinks** to every source article
+- **Branded header** with "SPECOLA" branding and date
+- **Clean typography** — refined spacing, clear visual hierarchy
+- **Bold emphasis** for key terms and news titles
 
 Available in **Italian** and **English**.
 
@@ -126,28 +154,41 @@ The profile is free-form text. The richer it is, the more relevant the briefing.
 
 ## Architecture
 
-Specola is a two-component system. The Swift app handles UI and scheduling; the Python engine does the heavy lifting. They communicate via a simple contract: CLI arguments in, JSON on stdout out.
+Specola is a three-component system. The Swift app handles UI and scheduling; the Python engine does the heavy lifting; a WidgetKit extension surfaces highlights in Notification Center. They communicate via JSON over stdout and App Groups.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        macOS (.app)                             │
-│                                                                 │
-│  ┌──────────────────┐         ┌──────────────────────────────┐  │
-│  │  Swift App (UI)  │         │     Python Engine (CLI)      │  │
-│  │                  │  args   │                              │  │
-│  │  MenuBarExtra    │────────▶│  1. Parse OPML               │  │
-│  │  Popover         │         │  2. Fetch RSS (20 threads)   │  │
-│  │  Settings        │  JSON   │  3. Build prompt + profile   │  │
-│  │  Scheduler       │◀────────│  4. claude -p < digest.md    │  │
-│  │  Notifications   │  stdout │  5. Render DOCX              │  │
-│  └──────────────────┘         └──────────────────────────────┘  │
-│                                                                 │
-│  Application Support/Specola/                                   │
-│  ├── engine/.venv/    (auto-created on first launch)            │
-│  ├── Feeds.opml       (copy of user's OPML)                    │
-│  ├── profile.md       (user's professional profile)             │
-│  └── history.json     (last 30 briefings metadata)              │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                         macOS (.app)                              │
+│                                                                   │
+│  ┌──────────────────┐         ┌───────────────────────────────┐  │
+│  │  Swift App (UI)  │         │      Python Engine (CLI)      │  │
+│  │                  │  args   │                               │  │
+│  │  MenuBarExtra    │────────▶│  1. Parse OPML                │  │
+│  │  Popover         │         │  2. Fetch RSS (20 threads)    │  │
+│  │  Settings        │  JSON   │  3. Build prompt + profile    │  │
+│  │  Scheduler       │◀────────│  4. claude -p < digest.md     │  │
+│  │  Notifications   │  stdout │  5. Render HTML (always)      │  │
+│  └────────┬─────────┘         │  6. Render DOCX/PDF/EPUB      │  │
+│           │                   │  7. Regenerate portal index    │  │
+│    App Group                  │  8. Extract highlights         │  │
+│           │                   └───────────────────────────────┘  │
+│  ┌────────▼─────────┐                                            │
+│  │  Widget Extension │                                           │
+│  │  WidgetKit        │  Reads widget_data.json from              │
+│  │  systemMed/Large  │  App Group shared container               │
+│  └──────────────────┘                                            │
+│                                                                   │
+│  Application Support/Specola/                                     │
+│  ├── engine/.venv/    (auto-created on first launch)              │
+│  ├── Feeds.opml       (copy of user's OPML)                      │
+│  ├── profile.md       (user's professional profile)               │
+│  └── history.json     (last 30 briefings metadata)                │
+│                                                                   │
+│  ~/Documents/Specola/                                             │
+│  ├── index.html       (browsable portal archive)                  │
+│  ├── Specola_*.html   (standalone briefings)                      │
+│  └── Specola_*.docx   (or .pdf or .epub)                         │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### Why Two Languages?
@@ -157,8 +198,12 @@ Specola is a two-component system. The Swift app handles UI and scheduling; the 
 | RSS parsing | Python (`feedparser`) | Mature, handles every RSS/Atom edge case |
 | Concurrent fetching | Python (`ThreadPoolExecutor`) | Simple, effective for I/O-bound work |
 | DOCX generation | Python (`python-docx`) | Only viable library for styled DOCX |
+| PDF generation | Python (`weasyprint`) | HTML→PDF with full CSS support |
+| EPUB generation | Python (`ebooklib`) | Standard EPUB3 output |
+| HTML portal | Python (string templates) | Static HTML, zero dependencies |
 | Claude CLI invocation | Python (`subprocess`) | Natural fit — pipe stdin, read stdout |
 | macOS menubar UI | Swift (SwiftUI `MenuBarExtra`) | Native, lightweight, no dock icon |
+| Notification Center widget | Swift (WidgetKit) | Native widget with App Group data sharing |
 | Scheduling & wake detection | Swift (`Timer` + `NSWorkspace`) | Proper OS integration |
 | Notifications | Swift (`UNUserNotificationCenter`) | Native macOS notifications |
 | App lifecycle | Swift | Login items, sandboxing, bundle management |
@@ -167,10 +212,12 @@ Specola is a two-component system. The Swift app handles UI and scheduling; the 
 
 ```
 Swift → Python:  Process() with CLI arguments
-                 --opml, --profile, --output-dir, --hours, --language
+                 --opml, --profile, --output-dir, --hours, --language, --format
 
 Python → Swift:  JSON on stdout
-                 {"status": "ok", "output_path": "...", "feed_count": N, "item_count": N}
+                 {"status": "ok", "output_path": "...", "html_path": "...",
+                  "portal_path": "...", "feed_count": N, "item_count": N,
+                  "highlights": ["...", "..."]}
                  {"status": "error", "message": "..."}
 ```
 
@@ -182,21 +229,27 @@ Python → Swift:  JSON on stdout
 | `prompt_builder.py` | Prompt assembly | Three-part prompt: system instruction + user profile (verbatim) + output instructions. Hardcoded IT/EN templates. Appends category list. |
 | `analyzer.py` | Claude CLI invocation | `subprocess.run(["claude", "-p", prompt], stdin=digest)`. No retry, no backoff. 300s timeout. Returns None on failure. |
 | `doc_generator.py` | DOCX rendering | Line-by-line markdown parsing with regex. Heading styles, bold runs, hyperlinks, horizontal rules. A4/Calibri/1.3 line height. Branded header/footer. Fallback mode for when Claude is unavailable. |
+| `html_generator.py` | HTML rendering | Shared `markdown_to_html()` function + standalone HTML page with inline CSS. Editorial styling (Georgia serif, 680px max-width, accent borders). Used by PDF and EPUB generators. |
+| `pdf_generator.py` | PDF rendering | Takes HTML from `html_generator` and converts to PDF via WeasyPrint. A4, 2.5cm margins, `@media print` rules. |
+| `epub_generator.py` | EPUB rendering | Creates EPUB3 from markdown via ebooklib. Single chapter, embedded CSS, language-aware metadata. |
+| `portal_generator.py` | Portal index + highlights | Scans output directory for HTML briefings, generates `index.html` with card previews. Also provides `extract_highlights()` for widget data. |
 
 ### Swift App Components
 
 | File | Role |
 |------|------|
-| `SpecolaApp.swift` | `@main` entry, `MenuBarExtra` with dynamic badge icon, `Settings` scene, first-launch flow, engine setup |
+| `SpecolaApp.swift` | `@main` entry, `MenuBarExtra` with dynamic badge icon, `Settings` scene, first-launch flow, engine setup, `specola://` URL scheme handler |
 | `MenuBarView.swift` | Popover: header with last generation time, scrollable history list (10 items), "Genera ora" with progress state, settings/quit footer |
-| `SettingsView.swift` | `TabView` with 4 tabs: Fonti (OPML picker), Pianificazione (time picker, auto-generate, login item), Profilo (multiline text editor), Avanzate (output dir, language, time window, Claude path) |
-| `Models/AppState.swift` | `@Observable` class: history array, generation state, unread count, JSON persistence, max 30 entries |
+| `SettingsView.swift` | `TabView` with 4 tabs: Fonti (OPML picker), Pianificazione (time picker, auto-generate, login item), Profilo (multiline text editor), Avanzate (format picker, output dir, language, time window, Claude path) |
+| `Models/AppState.swift` | `@Observable` class: history array, generation state, unread count, JSON persistence, max 30 entries, widget data updates via App Group |
 | `Models/Settings.swift` | `SpecolaSettings` enum wrapping `UserDefaults` + computed paths for Application Support |
-| `Models/SpecolaEntry.swift` | `Codable` struct: id, date, path, feedCount, itemCount, read |
-| `Services/EngineService.swift` | Async `Process()` launch, stdout JSON parsing, typed errors |
+| `Models/SpecolaEntry.swift` | `Codable` struct: id, date, path, htmlPath, feedCount, itemCount, highlights, read (backwards-compatible decoding) |
+| `Models/WidgetData.swift` | Shared `Codable` model for widget data: date, highlights, unread count, latest path |
+| `Services/EngineService.swift` | Async `Process()` launch, stdout JSON parsing (with html_path, highlights), typed errors |
 | `Services/SchedulerService.swift` | 60-second `Timer` + `NSWorkspace.didWakeNotification`. Pure `shouldGenerate()` function for testability |
 | `Services/NotificationService.swift` | `UNUserNotificationCenter` — permission request, success/error notifications |
 | `Helpers/MenuBarIcon.swift` | Renders `binoculars` SF Symbol + red badge overlay as `NSImage` |
+| `SpecolaWidget/` | WidgetKit extension: `TimelineProvider` reading from App Group, `systemMedium`/`systemLarge` views with highlights and unread badge |
 
 ---
 
@@ -209,7 +262,7 @@ Python → Swift:  JSON on stdout
 | **Fonti** | OPML file picker (`.opml`, `.xml`), feed count summary, remove button. File is copied to Application Support. |
 | **Pianificazione** | Hour/minute picker (default: 07:00), "Genera automaticamente" toggle, "Avvia al login" toggle (via `SMAppService`) |
 | **Profilo** | Multiline text editor (min 200pt height). Auto-saves on focus loss. No character limit. |
-| **Avanzate** | Output directory (default: `~/Documents/Specola/`), language picker (IT/EN), time window stepper (6-72 hours, default 24), Claude CLI path override |
+| **Avanzate** | Output format picker (DOCX/PDF/EPUB), output directory (default: `~/Documents/Specola/`), language picker (IT/EN), time window stepper (6-72 hours, default 24), Claude CLI path override |
 
 ### Data Storage
 
@@ -220,7 +273,9 @@ Python → Swift:  JSON on stdout
 | OPML feeds | `~/Library/Application Support/Specola/Feeds.opml` | XML |
 | Briefing history | `~/Library/Application Support/Specola/history.json` | JSON array (max 30 entries) |
 | Python engine | `~/Library/Application Support/Specola/engine/` | Python venv + source |
-| Generated briefings | `~/Documents/Specola/Specola_YYYY-MM-DD.docx` | DOCX |
+| Generated briefings | `~/Documents/Specola/Specola_YYYY-MM-DD.*` | DOCX, PDF, EPUB, or HTML |
+| Portal index | `~/Documents/Specola/index.html` | Static HTML |
+| Widget data | App Group shared container `/widget_data.json` | JSON |
 
 ---
 
@@ -246,14 +301,15 @@ specola_engine.py run [options]
 Required:
   --opml PATH           OPML file with RSS feed URLs
   --profile PATH        Plain text file describing the user's professional profile
-  --output-dir PATH     Directory where DOCX files are saved
+  --output-dir PATH     Directory where output files are saved
 
 Optional:
+  --format FMT          Output format: docx, pdf, epub (default: docx). HTML is always generated.
   --hours N             Only include articles from the last N hours (default: 24)
   --language it|en      Briefing language (default: it)
   --max-items N         Maximum items per feed category (default: 30)
   --model MODEL         Override the Claude model used for analysis
-  --dry-run             Fetch feeds and report counts, but skip Claude analysis and DOCX generation
+  --dry-run             Fetch feeds and report counts, but skip analysis and rendering
   --verbose             Enable DEBUG logging to stderr
 ```
 
@@ -263,7 +319,11 @@ Stdout (always JSON):
 
 ```json
 // Success
-{"status": "ok", "output_path": "/path/to/Specola_2026-04-05.docx", "feed_count": 187, "item_count": 42}
+{"status": "ok", "output_path": "/path/to/Specola_2026-04-05.pdf",
+ "html_path": "/path/to/Specola_2026-04-05.html",
+ "portal_path": "/path/to/index.html",
+ "feed_count": 187, "item_count": 42,
+ "highlights": ["EU AI Act enters enforcement...", "GitHub Copilot Workspace GA..."]}
 
 // Dry run
 {"status": "ok", "feed_count": 187, "item_count": 42}
@@ -276,7 +336,7 @@ Stderr: logging (WARNING by default, DEBUG with `--verbose`).
 
 ### Fallback Behavior
 
-If Claude CLI fails (not found, timeout, error), the engine **still generates a DOCX** from the raw feed digest with a red warning banner: "Analisi non disponibile." This ensures you always get *something*, even if the AI analysis is temporarily unavailable.
+If Claude CLI fails (not found, timeout, error), the engine **still generates output** from the raw feed digest with a warning banner: "Analisi non disponibile." The HTML version is always produced; the chosen format falls back gracefully. This ensures you always get *something*, even if the AI analysis is temporarily unavailable.
 
 ---
 
@@ -348,15 +408,23 @@ specola/
 │   └── SchedulerServiceTests.swift # Scheduling logic
 ├── engine/                         # Python engine (bundled in .app)
 │   ├── specola_engine.py           # CLI entry point + orchestration
-│   ├── requirements.txt            # feedparser, python-docx, python-dateutil
+│   ├── requirements.txt            # feedparser, python-docx, python-dateutil, weasyprint, ebooklib
 │   ├── requirements-dev.txt        # + pytest
 │   ├── setup_engine.sh             # venv creation script
 │   ├── src/
 │   │   ├── feed_fetcher.py         # OPML + RSS + digest
 │   │   ├── prompt_builder.py       # IT/EN prompt templates
 │   │   ├── analyzer.py             # Claude CLI subprocess
-│   │   └── doc_generator.py        # DOCX renderer
-│   └── tests/                      # 46 pytest tests
+│   │   ├── doc_generator.py        # DOCX renderer
+│   │   ├── html_generator.py       # Markdown → HTML (shared conversion + standalone page)
+│   │   ├── pdf_generator.py        # HTML → PDF via WeasyPrint
+│   │   ├── epub_generator.py       # Markdown → EPUB via ebooklib
+│   │   └── portal_generator.py     # Portal index + highlight extraction
+│   └── tests/                      # pytest tests
+├── SpecolaWidget/                  # Notification Center widget extension
+│   ├── SpecolaWidget.swift         # Widget bundle + TimelineProvider
+│   ├── SpecolaWidgetEntry.swift    # Timeline entry model
+│   └── SpecolaWidgetView.swift     # SwiftUI views (systemMedium/Large)
 ├── scripts/
 │   └── generate_icon.swift         # App icon generator
 ├── project.yml                     # xcodegen project definition
@@ -375,12 +443,14 @@ specola/
 | **Native Swift, not Electron** | A menubar app should be invisible when you don't need it. ~15 MB, not ~200 MB. |
 | **Python for the engine** | `feedparser` handles every RSS/Atom edge case. `python-docx` is the only viable DOCX library. Both are battle-tested. |
 | **Two processes, not one** | Clean separation. The engine is testable standalone. The app is pure UI. Neither depends on the other's internals. |
-| **DOCX, not PDF** | Editable, searchable, annotatable. Opens everywhere. You can paste sections into emails or docs. |
+| **Multi-format with HTML always-on** | DOCX for editability, PDF for sharing, EPUB for reading. HTML is always generated because it feeds the portal archive and is the lightest, most portable format. |
 | **No async Python** | `ThreadPoolExecutor` is simpler and perfectly adequate for I/O-bound RSS fetching. No event loop complexity. |
 | **No Core Data** | 30 JSON entries don't need a database. `Codable` + file I/O is simpler and more debuggable. |
 | **No launchd** | An internal timer + wake-from-sleep observer keeps scheduling self-contained. No system-level configuration to manage. |
 | **Bundled engine** | The Python engine ships inside the `.app` bundle. On first launch it's copied to Application Support and the venv is created automatically. Zero manual setup. |
 | **Links in every item** | Every cited news item includes a clickable hyperlink to the original source. The briefing is a starting point for deeper reading, not a replacement. |
+| **Static portal, not a web server** | `index.html` is a static file, not a running server. No port conflicts, no process management — just a file you open in a browser. |
+| **App Group for widget** | WidgetKit extensions run in a separate process. App Groups provide a clean, Apple-sanctioned data sharing mechanism via a shared JSON file. |
 
 ---
 

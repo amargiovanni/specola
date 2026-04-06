@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Specola — Your Daily Observatory</title>
-    <meta name="description" content="A native macOS menubar app that delivers AI-analyzed RSS briefings as premium DOCX reports, tailored to your professional profile.">
+    <meta name="description" content="A native macOS menubar app that delivers AI-analyzed RSS briefings as premium reports in DOCX, PDF, or EPUB, with an HTML portal and Notification Center widget. Tailored to your professional profile.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -631,6 +631,7 @@
             line-height: 2;
             color: var(--text);
             overflow-x: auto;
+            white-space: pre-wrap;
         }
 
         .install-code .comment { color: var(--text-dim); }
@@ -714,7 +715,7 @@
         <div class="hero-eyebrow">macOS Menubar App</div>
         <h1>Your daily<br>observatory on<br>what <em>matters</em></h1>
         <p class="hero-subtitle">
-            Specola fetches your RSS feeds, has Claude analyze them through the lens of your professional profile, and delivers a premium DOCX briefing every morning.
+            Specola fetches your RSS feeds, has Claude analyze them through the lens of your professional profile, and delivers a polished briefing in DOCX, PDF, or EPUB &mdash; plus an always-on HTML portal and a Notification Center widget.
         </p>
         <div class="hero-actions">
             <a href="https://github.com/amargiovanni/specola" class="btn-primary">
@@ -747,8 +748,8 @@
             </div>
             <div class="flow-step">
                 <div class="flow-step-num">03 &mdash; DELIVER</div>
-                <h3>Premium DOCX report</h3>
-                <p>The analysis is rendered into a professionally typeset document with clickable links, branded headers, accent colors, and clear visual hierarchy. Opens in Word, Pages, or Preview.</p>
+                <h3>Your format, your way</h3>
+                <p>Choose DOCX, PDF, or EPUB &mdash; Specola renders a professionally typeset report with clickable links, branded headers, and clear hierarchy. An HTML version is always generated for the browsable portal archive.</p>
             </div>
         </div>
     </div>
@@ -760,8 +761,8 @@
         <div class="preview-grid">
             <div class="preview-text reveal">
                 <div class="section-label">The output</div>
-                <h2 class="section-title">Not a summary.<br>An analysis.</h2>
-                <p class="section-desc">Each Specola is a multi-page briefing with deep analysis, source links, and actionable insights tailored to your role.</p>
+                <h2 class="section-title">Not a summary.<br>An intelligence brief.</h2>
+                <p class="section-desc">Each Specola is a multi-page briefing with deep analysis, source links, and actionable insights &mdash; delivered in your chosen format and archived in a browsable HTML portal.</p>
                 <div class="briefing-sections">
                     <div class="briefing-section">
                         <div class="briefing-dot"></div>
@@ -832,32 +833,42 @@
             <div class="feature">
                 <div class="feature-icon">&#x1f6e1;</div>
                 <h3>No API keys, no cloud</h3>
-                <p>Runs entirely on your Mac using the Claude Code CLI. Your feeds and profile never leave your machine.</p>
+                <p>Runs entirely on your Mac using the Claude Code CLI. Your feeds and profile never leave your machine. No subscription, no tracking, no third-party services.</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">&#x1f3af;</div>
                 <h3>Tailored to your profile</h3>
-                <p>Describe your role, stack, interests, and projects. Specola filters and prioritizes everything through your lens.</p>
+                <p>Describe your role, stack, interests, and active projects in free-form text. Specola filters, prioritizes, and contextualizes everything through your professional lens.</p>
             </div>
             <div class="feature">
-                <div class="feature-icon">&#x1f517;</div>
-                <h3>Every item has a source link</h3>
-                <p>Clickable hyperlinks to every original article. The briefing is a starting point, not a dead end.</p>
+                <div class="feature-icon">&#x1f4d1;</div>
+                <h3>DOCX, PDF, or EPUB</h3>
+                <p>Choose your format in Settings. Premium typeset reports with branded headers, accent colors, clickable source links, and clean visual hierarchy. A document you'd share with your board.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">&#x1f310;</div>
+                <h3>HTML portal archive</h3>
+                <p>Every briefing is also published as a standalone HTML page. A beautiful static index lists all your briefings with preview bullets &mdash; open it in any browser, share it, bookmark it.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">&#x1f514;</div>
+                <h3>Notification Center widget</h3>
+                <p>A native macOS widget shows today's key highlights at a glance, right in your Notification Center. Tap to open the full briefing. Always up to date, zero effort.</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">&#x23f0;</div>
                 <h3>Set and forget scheduling</h3>
-                <p>Pick your time, enable auto-generate. If your Mac is asleep, the briefing runs at wake. No launchd, no cron.</p>
+                <p>Pick your time, enable auto-generate. If your Mac is asleep, the briefing runs at wake. No launchd, no cron &mdash; just a briefing ready when you are.</p>
             </div>
             <div class="feature">
-                <div class="feature-icon">&#x1f4c4;</div>
-                <h3>Premium DOCX output</h3>
-                <p>Branded headers, accent colors, clean typography, clickable links. Not a raw text dump &mdash; a document you'd share with your board.</p>
+                <div class="feature-icon">&#x1f517;</div>
+                <h3>Every item has a source link</h3>
+                <p>Clickable hyperlinks to every original article in every format. The briefing is a starting point for deeper reading, not a dead end.</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">&#x1f30d;</div>
                 <h3>Italian &amp; English</h3>
-                <p>Full briefings in either language. Same depth, same structure, same quality. Switch anytime in Settings.</p>
+                <p>Full briefings in either language. Same depth, same structure, same quality. Switch anytime in Settings &mdash; even the portal and widget follow along.</p>
             </div>
         </div>
     </div>
@@ -868,8 +879,8 @@
     <div class="arch-inner">
         <div class="reveal">
             <div class="section-label">Under the hood</div>
-            <h2 class="section-title">Two components, one contract</h2>
-            <p class="section-desc">The Swift app handles UI and scheduling. The Python engine does the thinking. They talk via JSON over stdout.</p>
+            <h2 class="section-title">Three components, one contract</h2>
+            <p class="section-desc">The Swift app handles UI and scheduling. The Python engine does the analysis and rendering. A WidgetKit extension shows highlights in Notification Center. All connected via JSON and App Groups.</p>
         </div>
         <div class="arch-diagram reveal"><span class="wh">Swift App</span>                              <span class="wh">Python Engine</span>
 
@@ -877,13 +888,22 @@
   Popover                                 fetch_feeds()  <span class="bl">20 threads</span>
   Settings              <span class="hl">◀──JSON──</span>      build_prompt()
   Scheduler  <span class="bl">60s timer</span>                  analyze_with_claude()  <span class="bl">subprocess</span>
-  Notifications                           generate_docx()
+  Notifications                           generate_html()  <span class="bl">always</span>
+                                          generate_docx() <span class="bl">or</span> pdf() <span class="bl">or</span> epub()
+  <span class="wh">Widget Extension</span>                      portal_index()  <span class="bl">static archive</span>
+  WidgetKit  <span class="bl">systemMedium/Large</span>
+  <span class="hl">◀── App Group ──▶</span>  widget_data.json
 
   <span class="hl">~/Library/Application Support/Specola/</span>
   ├── engine/.venv/     <span class="bl">auto-created on first launch</span>
   ├── Feeds.opml        <span class="bl">copy of user's OPML</span>
   ├── profile.md        <span class="bl">professional profile</span>
-  └── history.json      <span class="bl">last 30 briefings</span></div>
+  └── history.json      <span class="bl">last 30 briefings</span>
+
+  <span class="hl">~/Documents/Specola/</span>
+  ├── index.html        <span class="bl">browsable portal archive</span>
+  ├── Specola_*.html    <span class="bl">standalone briefings</span>
+  └── Specola_*.docx    <span class="bl">or .pdf or .epub</span></div>
     </div>
 </section>
 
@@ -904,7 +924,7 @@
 <span class="cmd">cp -R</span> build/Build/Products/Release/Specola.app /Applications/
         </div>
         <p class="install-note reveal">
-            The Python engine is bundled inside the app. On first launch, Specola automatically sets up a virtual environment with all dependencies. Just make sure <code style="color:var(--accent);background:var(--accent-soft);padding:0.15rem 0.4rem;border-radius:3px;">claude</code> is in your PATH.
+            The Python engine is bundled inside the app and automatically set up on first launch &mdash; no manual Python configuration needed. Just make sure <code style="color:var(--accent);background:var(--accent-soft);padding:0.15rem 0.4rem;border-radius:3px;">claude</code> is in your PATH. On launch, import your OPML feeds, write your profile, and hit &ldquo;Genera ora&rdquo;. Your first briefing is minutes away.
         </p>
         <div style="margin-top: 2.5rem;" class="reveal">
             <a href="https://github.com/amargiovanni/specola" class="btn-primary">
