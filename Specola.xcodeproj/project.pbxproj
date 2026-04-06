@@ -26,6 +26,8 @@
 		D6BD3978C6CB8B5DE4346199 /* SpecolaWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77AA0CC34257684EF7A98A33 /* SpecolaWidgetView.swift */; };
 		DEF6D0B032711C46AC95CAC2 /* EngineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923C368DD10FD9CAFF4885C /* EngineService.swift */; };
 		E3028105E46C54D644918583 /* AppStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594D41A7355DC15E72FBBAA9 /* AppStateTests.swift */; };
+		E4A1B2C3D5E6F7A8B9C0D1E2 /* SettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* SettingsTests.swift */; };
+		F5B2C3D4E6F7A8B9C0D1E2F3 /* WidgetDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* WidgetDataTests.swift */; };
 		E58406279858E70D92E3A53C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B178126545A688B2B76CC228 /* WidgetKit.framework */; };
 		EBE6044F3C6B2C4580CFD935 /* SchedulerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C474C051AF17E6C65AC944E /* SchedulerService.swift */; };
 		FC5A683CE20786FAAD183407 /* SpecolaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A288B8E738488CDA13DFA8D2 /* SpecolaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -77,11 +79,13 @@
 		9761EF4F1B700676F612FFFA /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		99B0441BAC5F66FE990561C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerServiceTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* SettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTests.swift; sourceTree = "<group>"; };
 		A128E71CD6C14270CD0768A5 /* WidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetData.swift; sourceTree = "<group>"; };
 		A288B8E738488CDA13DFA8D2 /* SpecolaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpecolaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B178126545A688B2B76CC228 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		B556F8BFE313AD4A1A2ED4E1 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		B74BEAA22A38432CBADF135B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* WidgetDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataTests.swift; sourceTree = "<group>"; };
 		B97916B60C2AB5DC6EFD9BB5 /* EngineServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineServiceTests.swift; sourceTree = "<group>"; };
 		CACA7DF4DD7A28B3744C6D5D /* SpecolaWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaWidget.swift; sourceTree = "<group>"; };
 		D382BC81FB9D44464F8E7339 /* SpecolaWidgetEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaWidgetEntry.swift; sourceTree = "<group>"; };
@@ -138,7 +142,9 @@
 				594D41A7355DC15E72FBBAA9 /* AppStateTests.swift */,
 				B97916B60C2AB5DC6EFD9BB5 /* EngineServiceTests.swift */,
 				9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* SettingsTests.swift */,
 				4D1AAAE622D9D446C7F89651 /* SpecolaEntryTests.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* WidgetDataTests.swift */,
 			);
 			path = SpecolaTests;
 			sourceTree = "<group>";
@@ -345,7 +351,9 @@
 				E3028105E46C54D644918583 /* AppStateTests.swift in Sources */,
 				B5C4D639CE7AE0E874EAB7FE /* EngineServiceTests.swift in Sources */,
 				60A75FB9D83D88E200FD1571 /* SchedulerServiceTests.swift in Sources */,
+				E4A1B2C3D5E6F7A8B9C0D1E2 /* SettingsTests.swift in Sources */,
 				7D38C09869150EECE70B58F9 /* SpecolaEntryTests.swift in Sources */,
+				F5B2C3D4E6F7A8B9C0D1E2F3 /* WidgetDataTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
