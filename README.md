@@ -77,11 +77,21 @@ A native macOS widget (medium or large) shows today's highlights at a glance:
 - Tap to open the full briefing in your default app
 - Updates automatically after each generation — no polling
 
+### Themes
+
+Choose a visual theme in Settings — applied to all output formats (HTML, DOCX, PDF, EPUB):
+
+| Theme | Look |
+|-------|------|
+| **Corporate** | White background, navy headings, red accent borders. The default. |
+| **Minimal** | Warm gray background, black text, no colored accents — pure content. |
+| **Dark** | Dark navy background, light text, muted red accent, blue links. |
+
 ### Document Styling
 
-All formats share the Specola design language:
+All formats share the Specola design language (adapted per theme):
 
-- **Hero title** with accent underline in the Specola brand red
+- **Hero title** with accent underline
 - **Section headers** with colored left border accents
 - **Clickable hyperlinks** to every source article
 - **Branded header** with "SPECOLA" branding and date
@@ -89,6 +99,14 @@ All formats share the Specola design language:
 - **Bold emphasis** for key terms and news titles
 
 Available in **Italian** and **English**.
+
+### Spotlight Search
+
+Every briefing is indexed in macOS Spotlight. Search for any topic — "AI Act", "fintech trends" — and find the Specola that covered it. Items expire after 6 months and link directly to the HTML briefing.
+
+### Menu Bar Sparkline
+
+The binoculars icon in the menu bar shows a tiny 7-bar chart of article counts from your last 7 briefings — a glance at news volume trends without opening the popover.
 
 ---
 
@@ -136,14 +154,16 @@ xcodegen generate
 ## Quick Start
 
 1. **Launch Specola** from Applications — a binoculars icon appears in your menubar
-2. **Click the icon** to open the popover
-3. **Click "Impostazioni..."** to open the Settings window
-4. **Fonti tab** — click "Scegli file OPML..." and import your feeds
-5. **Profilo tab** — describe your role, stack, interests, and projects in plain text. The more detail you provide, the better Specola personalizes the briefing
-7. **Avanzate tab** (optional) — pick your LLM provider: Claude CLI (default), Codex CLI, or LM Studio (start server first)
-8. **Close Settings** and click **"Genera ora"** in the popover
-9. Wait a few minutes — Specola fetches all feeds, sends the digest to your AI for analysis, and renders the output
-10. A macOS notification appears when done. The briefing opens with a click.
+2. **The onboarding wizard** opens automatically on first launch — a 3-step guide:
+   - **Step 1**: Welcome overview with feature highlights
+   - **Step 2**: Import your OPML feeds file
+   - **Step 3**: Write your professional profile
+3. **Click "Inizia"** to complete setup
+4. **Click the menubar icon** to open the popover, then **"Genera ora"**
+5. Wait a few minutes — Specola fetches all feeds, sends the digest to your AI for analysis, and renders the output
+6. A macOS notification appears when done. The briefing opens with a click.
+
+To change your LLM provider, output format, theme, or language, open **Settings > Avanzate**.
 
 From tomorrow, the briefing generates automatically at your configured time. If your Mac is asleep, it runs as soon as it wakes up.
 
@@ -217,8 +237,9 @@ Specola is a three-component system. The Swift app handles UI and scheduling; th
 ```
 Swift → Python:  Process() with CLI arguments
                  --opml, --profile, --output-dir, --hours, --language, --format
-                 --provider claude|openai|lmstudio
+                 --provider claude|codex|lmstudio
                  --endpoint (LMStudio), --model
+                 --theme corporate|minimal|dark
 
 Python → Swift:  JSON on stdout
                  {"status": "ok", "output_path": "...", "html_path": "...",
@@ -234,27 +255,29 @@ Python → Swift:  JSON on stdout
 | `feed_fetcher.py` | OPML parsing + RSS fetch | `xml.etree.ElementTree` for OPML, `feedparser` for RSS, `ThreadPoolExecutor` with 20 workers, strips HTML, filters by time window, handles timezone-aware dates |
 | `prompt_builder.py` | Prompt assembly | Three-part prompt: system instruction + user profile (verbatim) + output instructions. Hardcoded IT/EN templates. Appends category list. |
 | `analyzer.py` | LLM invocation | Routes to Claude CLI, Codex CLI (both via `subprocess`), or LMStudio (`urllib`). No retry, no backoff. Configurable timeout. Returns None on failure. |
-| `doc_generator.py` | DOCX rendering | Line-by-line markdown parsing with regex. Heading styles, bold runs, hyperlinks, horizontal rules. A4/Calibri/1.3 line height. Branded header/footer. Fallback mode for when Claude is unavailable. |
-| `html_generator.py` | HTML rendering | Shared `markdown_to_html()` function + standalone HTML page with inline CSS. Editorial styling (Georgia serif, 680px max-width, accent borders). Used by PDF and EPUB generators. |
+| `doc_generator.py` | DOCX rendering | Line-by-line markdown parsing with regex. Theme-aware color palettes (corporate/minimal/dark). A4/Calibri/1.3 line height. Branded header/footer. Fallback mode. |
+| `html_generator.py` | HTML rendering | Shared `markdown_to_html()` + standalone HTML with theme-injected CSS (3 palettes). Used by PDF and EPUB generators. |
 | `pdf_generator.py` | PDF rendering | Takes HTML from `html_generator` and converts to PDF via WeasyPrint. A4, 2.5cm margins, `@media print` rules. |
-| `epub_generator.py` | EPUB rendering | Creates EPUB3 from markdown via ebooklib. Single chapter, embedded CSS, language-aware metadata. |
+| `epub_generator.py` | EPUB rendering | Creates EPUB3 from markdown via ebooklib. Theme-aware CSS (3 themes). Single chapter, language-aware metadata. |
 | `portal_generator.py` | Portal index + highlights | Scans output directory for HTML briefings, generates `index.html` with card previews. Also provides `extract_highlights()` for widget data. |
 
 ### Swift App Components
 
 | File | Role |
 |------|------|
-| `SpecolaApp.swift` | `@main` entry, `MenuBarExtra` with dynamic badge icon, `Settings` scene, first-launch flow, engine setup, `specola://` URL scheme handler |
+| `SpecolaApp.swift` | `@main` entry, `MenuBarExtra` with sparkline + badge icon, `Settings` scene, onboarding wizard on first launch, engine setup, `specola://` URL scheme handler |
+| `OnboardingView.swift` | 3-step guided setup wizard: Welcome → Import OPML → Write profile. Shown as sheet on first launch. |
 | `MenuBarView.swift` | Popover: header with last generation time, scrollable history list (10 items), "Genera ora" with progress state, settings/quit footer |
 | `SettingsView.swift` | `TabView` with 4 tabs: Fonti (OPML picker), Pianificazione (time picker, auto-generate, login item), Profilo (multiline text editor), Avanzate (LLM provider picker with conditional config, format picker, output dir, language, time window) |
-| `Models/AppState.swift` | `@Observable` class: history array, generation state, unread count, JSON persistence, max 30 entries, widget data updates via App Group |
+| `Models/AppState.swift` | `@Observable` class: history array, generation state, unread count, sparkline data, JSON persistence, max 30 entries, widget data updates via App Group, Spotlight indexing |
 | `Models/Settings.swift` | `SpecolaSettings` enum wrapping `UserDefaults` + computed paths for Application Support |
 | `Models/SpecolaEntry.swift` | `Codable` struct: id, date, path, htmlPath, feedCount, itemCount, highlights, read (backwards-compatible decoding) |
 | `Models/WidgetData.swift` | Shared `Codable` model for widget data: date, highlights, unread count, latest path |
-| `Services/EngineService.swift` | Async `Process()` launch with provider-specific args (--provider, --api-key, --endpoint), stdout JSON parsing, typed errors |
+| `Services/EngineService.swift` | Async `Process()` launch with provider/theme args, stdout JSON parsing, typed errors |
 | `Services/SchedulerService.swift` | 60-second `Timer` + `NSWorkspace.didWakeNotification`. Pure `shouldGenerate()` function for testability |
 | `Services/NotificationService.swift` | `UNUserNotificationCenter` — permission request, success/error notifications |
-| `Helpers/MenuBarIcon.swift` | Renders `binoculars` SF Symbol + red badge overlay as `NSImage` |
+| `Services/SpotlightService.swift` | `CSSearchableItem` indexing/reindexing of briefings for macOS Spotlight search |
+| `Helpers/MenuBarIcon.swift` | Renders `binoculars` SF Symbol + sparkline bars + red badge overlay as `NSImage` |
 | `SpecolaWidget/` | WidgetKit extension: `TimelineProvider` reading from App Group, `systemMedium`/`systemLarge` views with highlights and unread badge |
 
 ---
@@ -268,7 +291,7 @@ Python → Swift:  JSON on stdout
 | **Fonti** | OPML file picker (`.opml`, `.xml`), feed count summary, remove button. File is copied to Application Support. |
 | **Pianificazione** | Hour/minute picker (default: 07:00), "Genera automaticamente" toggle, "Avvia al login" toggle (via `SMAppService`) |
 | **Profilo** | Multiline text editor (min 200pt height). Auto-saves on focus loss. No character limit. |
-| **Avanzate** | LLM provider picker (Claude/Codex/LM Studio) with conditional config per provider, output format picker (DOCX/PDF/EPUB), output directory, language picker (IT/EN), time window stepper (6-72h) |
+| **Avanzate** | LLM provider picker (Claude/Codex/LM Studio) with conditional config, output format (DOCX/PDF/EPUB), theme picker (Corporate/Minimal/Dark), output directory, language (IT/EN), time window (6-72h) |
 
 ### Data Storage
 
@@ -329,8 +352,9 @@ LLM Provider:
   --endpoint URL        Custom API endpoint (lmstudio; default localhost:1234)
   --model MODEL         Model name (provider-specific, e.g. o3-pro, llama-3.3-70b)
 
-Optional:
+Output:
   --format FMT          Output format: docx, pdf, epub (default: docx). HTML is always generated.
+  --theme THEME         Visual theme: corporate, minimal, dark (default: corporate)
   --hours N             Only include articles from the last N hours (default: 24)
   --language it|en      Briefing language (default: it)
   --max-items N         Maximum items per feed category (default: 30)
@@ -370,13 +394,13 @@ If Claude CLI fails (not found, timeout, error), the engine **still generates ou
 ### Running Tests
 
 ```bash
-# Python engine — 353 tests
+# Python engine — 367 tests
 cd engine
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m pytest tests/ -v
 
-# Swift app — 80+ tests
+# Swift app — 90+ tests
 xcodebuild test -project Specola.xcodeproj -scheme Specola \
     -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 ```
@@ -411,7 +435,8 @@ This renders the icon at all 10 required macOS sizes (16px to 1024px) with the S
 ```
 specola/
 ├── Specola/                        # Swift app source
-│   ├── SpecolaApp.swift            # @main, MenuBarExtra, first launch
+│   ├── SpecolaApp.swift            # @main, MenuBarExtra, sparkline, onboarding
+│   ├── OnboardingView.swift        # 3-step first-launch wizard
 │   ├── MenuBarView.swift           # Popover UI
 │   ├── SettingsView.swift          # Four-tab settings (TabView)
 │   ├── Models/
@@ -421,9 +446,10 @@ specola/
 │   ├── Services/
 │   │   ├── EngineService.swift     # Python engine launcher
 │   │   ├── SchedulerService.swift  # Timer + wake detection
-│   │   └── NotificationService.swift
+│   │   ├── NotificationService.swift
+│   │   └── SpotlightService.swift  # CSSearchableItem indexing
 │   ├── Helpers/
-│   │   └── MenuBarIcon.swift       # Badge icon renderer
+│   │   └── MenuBarIcon.swift       # Sparkline + badge icon renderer
 │   └── Assets.xcassets/
 │       └── AppIcon.appiconset/     # Generated icon (10 sizes)
 ├── SpecolaTests/                   # Swift unit tests (80+)
@@ -478,6 +504,10 @@ specola/
 | **Links in every item** | Every cited news item includes a clickable hyperlink to the original source. The briefing is a starting point for deeper reading, not a replacement. |
 | **Static portal, not a web server** | `index.html` is a static file, not a running server. No port conflicts, no process management — just a file you open in a browser. |
 | **App Group for widget** | WidgetKit extensions run in a separate process. App Groups provide a clean, Apple-sanctioned data sharing mechanism via a shared JSON file. |
+| **Onboarding wizard** | A 3-step guided sheet on first launch (vs. raw Settings window). Reduces drop-off: the user understands value before configuring anything. |
+| **Spotlight indexing** | `CSSearchableItem` makes briefings searchable system-wide. Zero UI overhead — the user searches naturally in Spotlight and finds past briefings. |
+| **Sparkline in menubar** | A 7-bar micro-chart under the binoculars gives at-a-glance news volume without clicking. No text, no tooltip — pure ambient information. |
+| **Three visual themes** | Corporate/Minimal/Dark cover the main preferences. Theme is a single `--theme` CLI arg applied to all generators — simple, no template engines. |
 
 ---
 
