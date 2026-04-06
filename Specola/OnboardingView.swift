@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct OnboardingView: View {
-    @Environment(\.dismiss) private var dismiss
+    var onComplete: () -> Void = {}
     @State private var currentStep = 0
     @State private var profileText = ""
     @State private var opmlImported = false
@@ -47,7 +47,7 @@ struct OnboardingView: View {
                     Button("Inizia") {
                         saveProfile()
                         SpecolaSettings.hasCompletedSetup = true
-                        dismiss()
+                        onComplete()
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(profileText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

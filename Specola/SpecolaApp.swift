@@ -81,18 +81,44 @@ struct SpecolaApp: App {
 }
 
 private struct FirstLaunchModifier: ViewModifier {
-    @State private var showOnboarding = false
-
     func body(content: Content) -> some View {
         content
             .task {
                 if !SpecolaSettings.hasCompletedSetup {
-                    showOnboarding = true
+                    OnboardingWindowController.shared.show()
                 }
             }
-            .sheet(isPresented: $showOnboarding) {
-                OnboardingView()
-            }
+    }
+}
+
+/// Presents the onboarding in a standalone NSWindow so it doesn't
+/// vanish when the MenuBarExtra popover loses focus.
+final class OnboardingWindowController {
+    static let shared = OnboardingWindowController()
+    private var window: NSWindow?
+
+    func show() {
+        guard window == nil else {
+            window?.makeKeyAndOrderFront(nil)
+            return
+        }
+        let hosting = NSHostingController(rootView: OnboardingView {
+            self.close()
+        })
+        let win = NSWindow(contentViewController: hosting)
+        win.title = "Specola"
+        win.styleMask = [.titled, .closable]
+        win.setContentSize(NSSize(width: 520, height: 500))
+        win.center()
+        win.isReleasedWhenClosed = false
+        win.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        window = win
+    }
+
+    private func close() {
+        window?.close()
+        window = nil
     }
 }
 
