@@ -65,6 +65,47 @@ class TestBuildCategoryPrompt:
         assert "English" in result
 
 
+class TestBuildCategoryPromptCompactProfile:
+    """Tests for compact_profile parameter in build_category_prompt."""
+
+    def test_uses_compact_profile_when_provided(self):
+        result = build_category_prompt("Full long profile", "it", "Tech",
+                                       compact_profile="Keywords: fintech, AWS")
+        assert "Keywords: fintech, AWS" in result
+        assert "Full long profile" not in result
+
+    def test_uses_full_profile_when_compact_is_none(self):
+        result = build_category_prompt("Full profile text", "it", "Tech",
+                                       compact_profile=None)
+        assert "Full profile text" in result
+
+    def test_uses_full_profile_when_compact_is_empty(self):
+        result = build_category_prompt("Full profile text", "it", "Tech",
+                                       compact_profile="")
+        assert "Full profile text" in result
+
+    def test_compact_profile_still_has_system_instruction(self):
+        result = build_category_prompt("Full", "it", "Tech",
+                                       compact_profile="Keywords: test")
+        assert result.startswith(SYSTEM_INSTRUCTION)
+
+    def test_compact_profile_still_has_category(self):
+        result = build_category_prompt("Full", "it", "AI & ML",
+                                       compact_profile="Keywords: test")
+        assert "AI & ML" in result
+
+    def test_compact_profile_still_has_instructions(self):
+        result = build_category_prompt("Full", "it", "Tech",
+                                       compact_profile="Keywords: test")
+        assert "implicazioni" in result
+
+    def test_compact_profile_english(self):
+        result = build_category_prompt("Full", "en", "Tech",
+                                       compact_profile="Keywords: fintech")
+        assert "Keywords: fintech" in result
+        assert "implications" in result
+
+
 class TestBuildSynthesisPrompt:
     def test_italian_contains_all_sections(self):
         result = build_synthesis_prompt("Sono un CTO", "it", "2026-04-05")

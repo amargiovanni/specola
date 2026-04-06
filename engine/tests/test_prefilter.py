@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.prefilter import (
     extract_profile_keywords,
+    condense_profile,
     score_item,
     filter_by_relevance,
     deduplicate_items,
@@ -42,6 +43,56 @@ class TestExtractProfileKeywords:
         kw = extract_profile_keywords("fintech fintech fintech")
         assert isinstance(kw, set)
         assert "fintech" in kw
+
+
+# ── Profile condensation ─────────────────────────────────────────────────
+
+class TestCondenseProfile:
+    def test_returns_keywords_string(self):
+        result = condense_profile("Sono CTO di una startup fintech. Stack: Node.js, TypeScript, AWS.")
+        assert result.startswith("Keywords: ")
+        assert "fintech" in result
+        assert "TypeScript" in result
+
+    def test_preserves_original_casing(self):
+        result = condense_profile("Stack: TypeScript, AWS Lambda, PostgreSQL")
+        # Should recover original capitalization
+        assert "TypeScript" in result
+        assert "AWS" in result
+        assert "PostgreSQL" in result
+
+    def test_empty_profile_returns_empty(self):
+        assert condense_profile("") == ""
+        assert condense_profile("   ") == ""
+
+    def test_shorter_than_original(self):
+        profile = "Sono CTO di una startup fintech a Milano. Stack: Node.js, TypeScript, AWS Lambda, PostgreSQL. Mi interessa: regolamentazione EU, sicurezza API, trend VC europeo."
+        condensed = condense_profile(profile)
+        assert len(condensed) < len(profile)
+
+    def test_deterministic(self):
+        profile = "TypeScript AWS fintech startup"
+        r1 = condense_profile(profile)
+        r2 = condense_profile(profile)
+        assert r1 == r2
+
+    def test_sorted_alphabetically(self):
+        result = condense_profile("zebra alpha middle")
+        # Extract keywords after "Keywords: "
+        keywords_part = result.replace("Keywords: ", "")
+        keywords = [k.strip() for k in keywords_part.split(",")]
+        assert keywords == sorted(keywords, key=lambda s: s.lower())
+
+    def test_excludes_stopwords(self):
+        result = condense_profile("Sono il responsabile della sicurezza")
+        assert "sono" not in result.lower().split(", ")
+        assert "della" not in result.lower().split(", ")
+
+    def test_none_like_profile(self):
+        # Profile with only stopwords/short words
+        result = condense_profile("I am a the")
+        # Should return the original text if no keywords extracted
+        assert result == "I am a the"
 
 
 # ── Relevance scoring ────────────────────────────────────────────────────

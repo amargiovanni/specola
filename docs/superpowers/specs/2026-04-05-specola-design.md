@@ -79,7 +79,8 @@ specola_engine.py run [options]
 --hours N                Time window in hours (default: 24)
 --language LANG          Briefing language: it/en (default: it)
 --max-items N            Max items per category (default: 30)
---model MODEL            Claude model (optional)
+--model MODEL            Model for synthesis (phase 2). Also used for categories if --category-model not set.
+--category-model MODEL   Faster/cheaper model for per-category analysis (phase 1). Falls back to --model.
 --dry-run                Fetch only, no Claude, no DOCX
 --verbose                DEBUG logging
 ```

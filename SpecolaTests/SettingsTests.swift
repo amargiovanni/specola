@@ -236,6 +236,30 @@ final class SettingsTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "lmstudioModel")
     }
 
+    // MARK: - Claude model settings
+
+    func testDefaultClaudeCategoryModel() {
+        UserDefaults.standard.removeObject(forKey: "claudeCategoryModel")
+        XCTAssertEqual(SpecolaSettings.claudeCategoryModel, "")
+    }
+
+    func testDefaultClaudeSynthesisModel() {
+        UserDefaults.standard.removeObject(forKey: "claudeSynthesisModel")
+        XCTAssertEqual(SpecolaSettings.claudeSynthesisModel, "")
+    }
+
+    func testSetAndGetClaudeCategoryModel() {
+        SpecolaSettings.claudeCategoryModel = "claude-haiku-4-5-20251001"
+        XCTAssertEqual(SpecolaSettings.claudeCategoryModel, "claude-haiku-4-5-20251001")
+        UserDefaults.standard.removeObject(forKey: "claudeCategoryModel")
+    }
+
+    func testSetAndGetClaudeSynthesisModel() {
+        SpecolaSettings.claudeSynthesisModel = "claude-sonnet-4-6"
+        XCTAssertEqual(SpecolaSettings.claudeSynthesisModel, "claude-sonnet-4-6")
+        UserDefaults.standard.removeObject(forKey: "claudeSynthesisModel")
+    }
+
     // MARK: - Theme
 
     func testDefaultTheme() {

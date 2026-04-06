@@ -185,6 +185,8 @@ private struct AdvancedTab: View {
     @State private var lmstudioEndpoint = SpecolaSettings.lmstudioEndpoint
     @State private var lmstudioModel = SpecolaSettings.lmstudioModel
     @State private var theme = SpecolaSettings.theme
+    @State private var claudeCategoryModel = SpecolaSettings.claudeCategoryModel
+    @State private var claudeSynthesisModel = SpecolaSettings.claudeSynthesisModel
 
     var body: some View {
         Form {
@@ -242,7 +244,11 @@ private struct AdvancedTab: View {
                 case "claude":
                     TextField("Path CLI (auto-detected se vuoto)", text: $claudePath)
                         .onChange(of: claudePath) { _, val in SpecolaSettings.claudePath = val }
-                    Text("Posizioni controllate: /usr/local/bin/claude, ~/.local/bin/claude, ~/.claude/local/claude")
+                    TextField("Modello sintesi (es. claude-sonnet-4-6)", text: $claudeSynthesisModel)
+                        .onChange(of: claudeSynthesisModel) { _, val in SpecolaSettings.claudeSynthesisModel = val }
+                    TextField("Modello categorie (es. claude-haiku-4-5-20251001)", text: $claudeCategoryModel)
+                        .onChange(of: claudeCategoryModel) { _, val in SpecolaSettings.claudeCategoryModel = val }
+                    Text("Il modello categorie è usato per l'analisi per-categoria (veloce/economico). Il modello sintesi per la visione d'insieme (più capace). Se vuoti, usa il default di Claude CLI.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 

@@ -73,17 +73,24 @@ Rules: English, ONLY these sections, every item has link, don't invent, be analy
 
 def build_category_prompt(
     profile: str, language: str, category: str,
+    compact_profile: str | None = None,
 ) -> str:
-    """Build prompt for analyzing a single category (or batched categories)."""
+    """Build prompt for analyzing a single category (or batched categories).
+
+    If compact_profile is provided, it is used instead of the full profile
+    to reduce token usage. The full profile is reserved for synthesis.
+    """
     instructions = (
         CATEGORY_INSTRUCTIONS_EN if language == "en" else CATEGORY_INSTRUCTIONS_IT
     )
+
+    effective_profile = compact_profile if compact_profile else profile
 
     parts = [
         SYSTEM_INSTRUCTION,
         "",
         "Profilo utente:",
-        profile,
+        effective_profile,
         "",
         instructions.format(category=category),
     ]

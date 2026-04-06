@@ -13,20 +13,22 @@ The name comes from *specola*: the observatory tower from which astronomers scan
 ## How It Works
 
 ```
-    OPML feeds      Pre-filter       Your choice of AI         Your briefing
+    OPML feeds      Pre-filter       Dual-model AI              Your briefing
    ┌──────────┐    ┌──────────┐     ┌──────────────────┐     ┌──────────────┐
-   │ 200+ RSS │───▶│ Relevance│────▶│  Claude CLI      │────▶│  DOCX / PDF  │
-   │  sources  │    │ Dedup    │     │  Codex CLI       │     │  / EPUB      │
-   └──────────┘    │ Truncate │     │  LM Studio       │     └──────────────┘
-         │         └──────────┘     └──────────────────┘       + HTML portal
-     concurrent     60-75% fewer      prioritized by           + NC widget
-     fetching       tokens sent       your profile             + standalone HTML
+   │ 200+ RSS │───▶│ Relevance│────▶│ Phase 1: Haiku   │────▶│  DOCX / PDF  │
+   │  sources  │    │ Dedup    │     │  (per-category)  │     │  / EPUB      │
+   └──────────┘    │ Truncate │     │ Phase 2: Sonnet  │     └──────────────┘
+         │         │ Condense │     │  (synthesis)     │       + HTML portal
+     concurrent    │ profile  │     └──────────────────┘       + NC widget
+     fetching      └──────────┘      ~80% cheaper              + standalone HTML
+                    60-75% fewer
+                    tokens sent
 ```
 
 1. **You configure** your RSS feeds (OPML file), describe your professional profile, and pick your LLM provider
 2. **Every day at your chosen time**, Specola fetches all feeds concurrently (up to 20 threads)
 3. **A local pre-filter** scores each item against your profile keywords, removes duplicates across feeds, and truncates summaries — cutting 60-75% of LLM input tokens before any AI call
-4. **Your chosen AI** — Claude Code CLI, OpenAI Codex CLI, or a local model via LM Studio — analyzes the filtered digest and produces a deep, structured briefing tailored to your role, stack, and interests. Small categories are batched into a single call to reduce overhead.
+4. **Your chosen AI** — Claude Code CLI, OpenAI Codex CLI, or a local model via LM Studio — analyzes the filtered digest in two phases: a fast model handles per-category analysis (with a condensed keyword profile), then a more capable model produces the cross-cutting synthesis (with the full profile). Small categories are batched into a single call to reduce overhead.
 5. **A premium report** (DOCX, PDF, or EPUB — your choice) lands in your Documents folder — professionally formatted, with clickable source links, ready to read, share, or archive
 6. **An HTML portal** is always generated alongside — a browsable archive of all your briefings, openable in any browser
 7. **A Notification Center widget** shows today's key highlights at a glance
@@ -241,7 +243,7 @@ Specola is a three-component system. The Swift app handles UI and scheduling; th
 Swift → Python:  Process() with CLI arguments
                  --opml, --profile, --output-dir, --hours, --language, --format
                  --provider claude|codex|lmstudio
-                 --endpoint (LMStudio), --model
+                 --endpoint (LMStudio), --model, --category-model
                  --theme corporate|minimal|dark
 
 Python → Swift:  JSON on stdout
@@ -257,7 +259,8 @@ Python → Swift:  JSON on stdout
 |--------|---------------|-------------|
 | `feed_fetcher.py` | OPML parsing + RSS fetch | `xml.etree.ElementTree` for OPML, `feedparser` for RSS, `ThreadPoolExecutor` with 20 workers, strips HTML, filters by time window, handles timezone-aware dates. Supports compact digest format for LLM input (~30% fewer tokens). |
 | `prefilter.py` | **Local pre-filtering** | Runs before any LLM call. Three stages: (1) keyword-based relevance scoring against user profile, (2) cross-feed deduplication via title Jaccard similarity, (3) summary truncation to 200 chars. Typically reduces LLM input by 60-75%. |
-| `prompt_builder.py` | Prompt assembly | Concise two-phase prompts: per-category analysis + cross-cutting synthesis. IT/EN templates optimized for token efficiency. |
+| `prefilter.py` also provides | Profile condensation | `condense_profile()` extracts keywords from the user profile for compact per-category prompts (~50 tokens vs ~400). |
+| `prompt_builder.py` | Prompt assembly | Concise two-phase prompts: per-category analysis (with compact profile) + cross-cutting synthesis (with full profile). IT/EN templates optimized for token efficiency. |
 | `analyzer.py` | LLM invocation | Routes to Claude CLI, Codex CLI (both via `subprocess`), or LMStudio (`urllib`). No retry, no backoff. Configurable timeout. Returns None on failure. |
 | `doc_generator.py` | DOCX rendering | Line-by-line markdown parsing with regex. Theme-aware color palettes (corporate/minimal/dark). A4/Calibri/1.3 line height. Branded header/footer. Fallback mode. |
 | `html_generator.py` | HTML rendering | Shared `markdown_to_html()` + standalone HTML with theme-injected CSS (3 palettes). Used by PDF and EPUB generators. |
@@ -295,13 +298,13 @@ Python → Swift:  JSON on stdout
 | **Fonti** | OPML file picker (`.opml`, `.xml`), feed count summary, remove button. File is copied to Application Support. |
 | **Pianificazione** | Hour/minute picker (default: 07:00), "Genera automaticamente" toggle, "Avvia al login" toggle (via `SMAppService`) |
 | **Profilo** | Multiline text editor (min 200pt height). Auto-saves on focus loss. No character limit. |
-| **Avanzate** | LLM provider picker (Claude/Codex/LM Studio) with conditional config, output format (DOCX/PDF/EPUB), theme picker (Corporate/Minimal/Dark), output directory, language (IT/EN), time window (6-72h) |
+| **Avanzate** | LLM provider picker (Claude/Codex/LM Studio) with conditional config — Claude shows synthesis model + category model fields for dual-model optimization; output format (DOCX/PDF/EPUB), theme picker (Corporate/Minimal/Dark), output directory, language (IT/EN), time window (6-72h) |
 
 ### Data Storage
 
 | Data | Location | Format |
 |------|----------|--------|
-| App settings | `UserDefaults` (com.oltrematica.specola) | Key-value (incl. LLM provider, API keys, endpoints) |
+| App settings | `UserDefaults` (com.oltrematica.specola) | Key-value (incl. LLM provider, model settings, API keys, endpoints) |
 | User profile | `~/Library/Application Support/Specola/profile.md` | Plain text |
 | OPML feeds | `~/Library/Application Support/Specola/Feeds.opml` | XML |
 | Briefing history | `~/Library/Application Support/Specola/history.json` | JSON array (max 30 entries) |
@@ -319,12 +322,20 @@ The Python engine can be used standalone, independent of the Swift app:
 ```bash
 cd engine
 
-# With Claude CLI (default)
+# With Claude CLI (default — single model)
 .venv/bin/python specola_engine.py run \
     --opml ~/feeds.opml \
     --profile ~/profile.md \
     --output-dir ~/Documents/Specola \
     --language it --hours 24
+
+# With Claude CLI — dual-model (recommended for cost savings)
+.venv/bin/python specola_engine.py run \
+    --opml ~/feeds.opml \
+    --profile ~/profile.md \
+    --output-dir ~/Documents/Specola \
+    --model claude-sonnet-4-6 \
+    --category-model claude-haiku-4-5-20251001
 
 # With OpenAI Codex CLI (requires OPENAI_API_KEY in env)
 .venv/bin/python specola_engine.py run \
@@ -354,7 +365,8 @@ Required:
 LLM Provider:
   --provider PROVIDER   LLM backend: claude, codex, lmstudio (default: claude)
   --endpoint URL        Custom API endpoint (lmstudio; default localhost:1234)
-  --model MODEL         Model name (provider-specific, e.g. o3-pro, llama-3.3-70b)
+  --model MODEL         Model for synthesis (phase 2). Also used for categories if --category-model not set.
+  --category-model MODEL  Faster/cheaper model for per-category analysis (phase 1). Falls back to --model.
 
 Output:
   --format FMT          Output format: docx, pdf, epub (default: docx). HTML is always generated.
@@ -505,6 +517,8 @@ specola/
 | **Local pre-filtering** | Keyword relevance scoring, cross-feed deduplication, and summary truncation happen locally before any LLM call. This cuts token usage by 60-75% — pasta recipes don't reach the AI if you're a fintech CTO. |
 | **Compact digest format** | The LLM receives a terse format (one-line headers, no redundant markdown) instead of the verbose display format. ~30% fewer tokens per item. |
 | **Small category batching** | Categories with <5 items are merged into a single LLM call, avoiding the fixed overhead of prompt + profile repeated for each tiny category. |
+| **Dual-model architecture** | Per-category analysis uses a fast/cheap model (e.g. Haiku); cross-cutting synthesis uses a more capable model (e.g. Sonnet). Configurable via `--category-model` and `--model`. ~75% cost reduction on phase 1 calls. |
+| **Condensed profile** | Per-category calls receive a keyword-only version of the user profile (~50 tokens) instead of the full text (~400 tokens). The full profile is reserved for synthesis where nuance matters. |
 | **No async Python** | `ThreadPoolExecutor` is simpler and perfectly adequate for I/O-bound RSS fetching. No event loop complexity. |
 | **No Core Data** | 30 JSON entries don't need a database. `Codable` + file I/O is simpler and more debuggable. |
 | **No launchd** | An internal timer + wake-from-sleep observer keeps scheduling self-contained. No system-level configuration to manage. |

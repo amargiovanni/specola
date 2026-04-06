@@ -74,6 +74,42 @@ def extract_profile_keywords(profile_text: str) -> set[str]:
     return set(counts.keys())
 
 
+def condense_profile(profile_text: str) -> str:
+    """Produce a compact keyword-only version of the user profile.
+
+    Used for per-category LLM calls where the full profile text would waste
+    tokens. The full profile is reserved for the synthesis pass.
+
+    A 400-token profile typically condenses to ~50-80 tokens.
+    """
+    if not profile_text or not profile_text.strip():
+        return ""
+
+    keywords = extract_profile_keywords(profile_text)
+    if not keywords:
+        return profile_text.strip()
+
+    # Sort for deterministic output; capitalize proper-looking tokens
+    # Recover original casing from the source text for better LLM comprehension
+    original_tokens = _WORD_RE.findall(profile_text)
+    # Build a map: lowercase → best original form (prefer capitalized/original)
+    casing: dict[str, str] = {}
+    for tok in original_tokens:
+        low = tok.lower()
+        if low in keywords:
+            # Prefer forms that start uppercase or contain dots (e.g. Node.js)
+            if low not in casing or tok[0].isupper():
+                casing[low] = tok
+
+    # Use original casing where available, else lowercase
+    display = sorted(
+        (casing.get(kw, kw) for kw in keywords),
+        key=lambda s: s.lower(),
+    )
+
+    return "Keywords: " + ", ".join(display)
+
+
 # ── Relevance scoring ────────────────────────────────────────────────────
 
 def score_item(item: dict, profile_keywords: set[str]) -> float:

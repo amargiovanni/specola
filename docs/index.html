@@ -743,8 +743,8 @@
             </div>
             <div class="flow-step">
                 <div class="flow-step-num">02 &mdash; ANALYZE</div>
-                <h3>Your AI reads everything</h3>
-                <p>The full digest is sent to your chosen LLM &mdash; Claude Code CLI, OpenAI Codex CLI, or a local model via LM Studio. It prioritizes, connects dots, and writes analytical paragraphs &mdash; not one-line summaries.</p>
+                <h3>Dual-model, two-phase analysis</h3>
+                <p>A fast model (e.g. Haiku) handles per-category analysis with a condensed keyword profile. Then a more capable model (e.g. Sonnet) produces the cross-cutting synthesis with your full profile. Two phases, ~80% cheaper, same depth.</p>
             </div>
             <div class="flow-step">
                 <div class="flow-step-num">03 &mdash; DELIVER</div>
@@ -836,6 +836,11 @@
                 <p>Use Claude Code CLI, OpenAI Codex CLI, or LM Studio for fully offline analysis with your own local models. All three run locally as CLI tools &mdash; no API keys to manage in Specola. Switch anytime in Settings.</p>
             </div>
             <div class="feature">
+                <div class="feature-icon">&#x26a1;</div>
+                <h3>Dual-model &amp; token-smart</h3>
+                <p>Per-category analysis uses a fast, cheap model with a condensed keyword profile. Synthesis uses a capable model with your full profile. Pre-filtering, dedup, batching, and profile condensation cut costs by ~80%. Configure models independently in Settings.</p>
+            </div>
+            <div class="feature">
                 <div class="feature-icon">&#x1f3af;</div>
                 <h3>Tailored to your profile</h3>
                 <p>Describe your role, stack, interests, and active projects in free-form text. Specola filters, prioritizes, and contextualizes everything through your professional lens.</p>
@@ -907,7 +912,7 @@
   MenuBarExtra          <span class="hl">───args──▶</span>      parse_opml()
   Popover                                 fetch_feeds()  <span class="bl">20 threads</span>
   Settings              <span class="hl">◀──JSON──</span>      build_prompt()
-  Scheduler  <span class="bl">60s timer</span>                  analyze()  <span class="bl">Claude / OpenAI / LMStudio</span>
+  Scheduler  <span class="bl">60s timer</span>                  analyze()  <span class="bl">dual-model: fast + capable</span>
   Notifications                           generate_html()  <span class="bl">always</span>
                                           generate_docx() <span class="bl">or</span> pdf() <span class="bl">or</span> epub()
   <span class="wh">Widget Extension</span>                      portal_index()  <span class="bl">static archive</span>
