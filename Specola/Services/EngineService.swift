@@ -51,7 +51,12 @@ enum EngineService {
 
         // Provider-specific arguments
         let provider = SpecolaSettings.llmProvider
-        if provider == "codex" {
+        if provider == "claude" {
+            let synthesisModel = SpecolaSettings.claudeSynthesisModel
+            if !synthesisModel.isEmpty { args += ["--model", synthesisModel] }
+            let categoryModel = SpecolaSettings.claudeCategoryModel
+            if !categoryModel.isEmpty { args += ["--category-model", categoryModel] }
+        } else if provider == "codex" {
             let model = SpecolaSettings.codexModel
             if !model.isEmpty { args += ["--model", model] }
         } else if provider == "lmstudio" {

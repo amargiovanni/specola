@@ -19,6 +19,8 @@ enum SpecolaSettings {
         static let lmstudioEndpoint = "lmstudioEndpoint"
         static let lmstudioModel = "lmstudioModel"
         static let theme = "theme"
+        static let claudeCategoryModel = "claudeCategoryModel"
+        static let claudeSynthesisModel = "claudeSynthesisModel"
     }
 
     static var scheduleHour: Int {
@@ -102,6 +104,18 @@ enum SpecolaSettings {
     static var theme: String {
         get { defaults.string(forKey: Key.theme) ?? "corporate" }
         set { defaults.set(newValue, forKey: Key.theme) }
+    }
+
+    // MARK: - Claude Model Settings
+
+    static var claudeCategoryModel: String {
+        get { defaults.string(forKey: Key.claudeCategoryModel) ?? "" }
+        set { defaults.set(newValue, forKey: Key.claudeCategoryModel) }
+    }
+
+    static var claudeSynthesisModel: String {
+        get { defaults.string(forKey: Key.claudeSynthesisModel) ?? "" }
+        set { defaults.set(newValue, forKey: Key.claudeSynthesisModel) }
     }
 
     static var supportDir: URL {

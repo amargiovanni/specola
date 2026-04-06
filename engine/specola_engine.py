@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.feed_fetcher import parse_opml, fetch_feeds, format_digest
-from src.prefilter import prefilter_items
+from src.prefilter import prefilter_items, condense_profile
 from src.prompt_builder import build_category_prompt, build_synthesis_prompt
 from src.analyzer import analyze_with_claude, analyze
 from src.doc_generator import generate_docx, generate_fallback_docx
@@ -52,12 +52,18 @@ def _analyze_categories(
     model: str | None,
     provider: str = "claude",
     endpoint: str | None = None,
+    category_model: str | None = None,
+    compact_profile: str | None = None,
 ) -> tuple[dict[str, str], int]:
     """Phase 1: Analyze each category independently.
 
     Small categories (< _BATCH_THRESHOLD items) are batched into a single
     LLM call to avoid paying the prompt overhead (profile + instructions)
     for each tiny category. Uses compact digest format to minimize tokens.
+
+    If category_model is set, it overrides model for phase 1 calls (e.g. a
+    faster/cheaper model like Haiku). If compact_profile is set, the condensed
+    keyword-only profile is used instead of the full text.
 
     Returns (category_analyses, success_count).
     """
@@ -75,6 +81,9 @@ def _analyze_categories(
     total_calls = len(big_cats) + (1 if small_cats else 0)
     call_idx = 0
 
+    # Resolve the model for phase 1: prefer category_model, fall back to model
+    phase1_model = category_model or model
+
     # ── Individual calls for large categories ──
     for category, items in big_cats.items():
         call_idx += 1
@@ -85,9 +94,10 @@ def _analyze_categories(
         digest_path = work_dir / f"cat_{safe_name}_{today}.md"
         digest_path.write_text(mini_digest, encoding="utf-8")
 
-        prompt = build_category_prompt(profile_text, language, category)
+        prompt = build_category_prompt(profile_text, language, category,
+                                       compact_profile=compact_profile)
         analysis = analyze(
-            digest_path, prompt, provider=provider, model=model,
+            digest_path, prompt, provider=provider, model=phase1_model,
             timeout=CATEGORY_TIMEOUT, endpoint=endpoint,
         )
 
@@ -120,9 +130,10 @@ def _analyze_categories(
 
         # Build a combined prompt listing all batched category names
         batch_label = " + ".join(small_cats.keys())
-        prompt = build_category_prompt(profile_text, language, batch_label)
+        prompt = build_category_prompt(profile_text, language, batch_label,
+                                       compact_profile=compact_profile)
         analysis = analyze(
-            digest_path, prompt, provider=provider, model=model,
+            digest_path, prompt, provider=provider, model=phase1_model,
             timeout=CATEGORY_TIMEOUT, endpoint=endpoint,
         )
 
@@ -257,6 +268,7 @@ def run_engine(
     provider: str = "claude",
     endpoint: str | None = None,
     theme: str = "corporate",
+    category_model: "str | None" = None,
 ) -> None:
     if verbose:
         logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
@@ -304,6 +316,14 @@ def run_engine(
 
     profile_text = Path(profile).read_text(encoding="utf-8")
 
+    # Build compact profile for category calls (saves ~70% of profile tokens per call)
+    compact_profile = condense_profile(profile_text)
+    if compact_profile and compact_profile != profile_text.strip():
+        logger.info(
+            "Profile condensed: %d chars → %d chars (keywords only for phase 1)",
+            len(profile_text), len(compact_profile),
+        )
+
     # 2b. Pre-filter: local relevance scoring, dedup, summary truncation
     filtered = prefilter_items(items_by_category, profile_text)
     filtered_count = sum(len(items) for items in filtered.values())
@@ -318,17 +338,27 @@ def run_engine(
         filtered = items_by_category
 
     # 3. Phase 1 — Per-category analysis
-    logger.info("Phase 1: Analyzing %d categories...", len(filtered))
+    effective_cat_model = category_model or model
+    logger.info(
+        "Phase 1: Analyzing %d categories%s...",
+        len(filtered),
+        f" (model: {effective_cat_model})" if effective_cat_model else "",
+    )
     category_analyses, category_successes = _analyze_categories(
         filtered, profile_text, language, work_dir, today, model,
         provider=provider, endpoint=endpoint,
+        category_model=category_model, compact_profile=compact_profile,
     )
     logger.info("Phase 1 done: %d/%d categories analyzed by %s", category_successes, len(filtered), provider)
 
     # 4. Phase 2 — Synthesis (only if we have at least some Claude analyses)
+    #    Synthesis always uses the main --model (full quality) + full profile text
     synthesis = None
     if category_successes > 0:
-        logger.info("Phase 2: Synthesis...")
+        logger.info(
+            "Phase 2: Synthesis%s...",
+            f" (model: {model})" if model else "",
+        )
         synthesis = _synthesize(
             category_analyses, profile_text, language, today_date, work_dir, today, model,
             provider=provider, endpoint=endpoint,
@@ -394,7 +424,10 @@ def main() -> None:
     run_parser.add_argument("--language", default="it", choices=["it", "en"])
     run_parser.add_argument("--format", default="docx", choices=["docx", "pdf", "epub"])
     run_parser.add_argument("--max-items", type=int, default=30)
-    run_parser.add_argument("--model", default=None)
+    run_parser.add_argument("--model", default=None,
+                            help="Model for synthesis (phase 2). Also used for categories if --category-model not set.")
+    run_parser.add_argument("--category-model", default=None,
+                            help="Faster/cheaper model for per-category analysis (phase 1). Falls back to --model.")
     run_parser.add_argument("--theme", default="corporate",
                             choices=["corporate", "minimal", "dark"],
                             help="Visual theme for output documents")
@@ -422,6 +455,7 @@ def main() -> None:
             provider=args.provider,
             endpoint=args.endpoint,
             theme=args.theme,
+            category_model=args.category_model,
         )
 
 

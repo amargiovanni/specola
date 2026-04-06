@@ -228,7 +228,7 @@ engine/
 ├── src/
 │   ├── __init__.py
 │   ├── feed_fetcher.py     # Parsing OPML + fetch RSS concorrente
-│   ├── prefilter.py        # Pre-filtering locale: rilevanza, dedup, troncamento
+│   ├── prefilter.py        # Pre-filtering locale: rilevanza, dedup, troncamento, condensazione profilo
 │   ├── analyzer.py         # Invocazione claude CLI via subprocess
 │   ├── doc_generator.py    # Generazione DOCX con python-docx
 │   └── prompt_builder.py   # Costruzione dinamica del prompt (ottimizzato token)
@@ -246,7 +246,8 @@ specola_engine.py run [opzioni]
 --hours N                Finestra temporale (default: 24)
 --language LANG          Lingua briefing: it/en (default: it)
 --max-items N            Max item per categoria (default: 30)
---model MODEL            Modello Claude (opzionale)
+--model MODEL            Modello per la sintesi (fase 2). Usato anche per le categorie se --category-model non è impostato.
+--category-model MODEL   Modello veloce/economico per l'analisi per-categoria (fase 1). Falls back a --model.
 --dry-run                Solo fetch, no Claude, no DOCX
 --verbose                Logging DEBUG
 ```
@@ -321,6 +322,24 @@ Prima di inviare qualsiasi dato al LLM, il pre-filter applica tre operazioni loc
 #### 4. Rimozione categorie vuote
 - Categorie con 0 item dopo il filtro vengono rimosse (nessuna chiamata LLM)
 
+#### 5. Condensazione profilo (`condense_profile()`)
+- Estrae keyword dal profilo utente e produce una stringa compatta "Keywords: ..."
+- Usato per le chiamate per-categoria (fase 1) al posto del profilo completo
+- Un profilo di ~400 token diventa ~50-80 token
+- Il profilo completo è riservato alla sintesi (fase 2) dove il contesto completo conta
+- Recupera il casing originale dal testo sorgente (es. "TypeScript", "AWS", "PagoPA")
+
+### Architettura dual-model
+
+L'analisi avviene in due fasi con modelli potenzialmente diversi:
+
+| Fase | Task | Modello consigliato | Profilo |
+|------|------|---------------------|---------|
+| Fase 1 (categorie) | Analisi per-item | `claude-haiku-4-5-20251001` (veloce, economico) | Condensato (keyword) |
+| Fase 2 (sintesi) | Visione trasversale | `claude-sonnet-4-6` (più capace) | Completo |
+
+Configurabile via `--model` (sintesi) e `--category-model` (categorie). Se `--category-model` non è impostato, entrambe le fasi usano `--model`.
+
 ### Batching categorie piccole
 
 Categorie con meno di 5 item vengono raggruppate in una singola chiamata LLM anziché una per categoria. Questo evita il costo fisso del prompt (profilo + istruzioni) ripetuto per ogni micro-categoria.
@@ -348,7 +367,10 @@ strutturata. Per ogni notizia includi il link [testo](url).
 Spiega contesto, implicazioni e rilevanza per l'utente.
 ```
 
-#### 2. Profilo utente (da profile.md, iniettato così com'è)
+#### 2. Profilo utente
+
+Per le chiamate per-categoria (fase 1): profilo condensato (keyword-only, ~50 token).
+Per la sintesi (fase 2): profilo completo (da profile.md, iniettato così com'è).
 
 ```
 Profilo utente:
