@@ -184,6 +184,7 @@ private struct AdvancedTab: View {
     @State private var codexModel = SpecolaSettings.codexModel
     @State private var lmstudioEndpoint = SpecolaSettings.lmstudioEndpoint
     @State private var lmstudioModel = SpecolaSettings.lmstudioModel
+    @State private var theme = SpecolaSettings.theme
 
     var body: some View {
         Form {
@@ -220,6 +221,14 @@ private struct AdvancedTab: View {
 
                 Stepper("Ultime \(hours) ore", value: $hours, in: 6...72)
                     .onChange(of: hours) { _, val in SpecolaSettings.hours = val }
+
+                Picker("Tema", selection: $theme) {
+                    Text("Corporate").tag("corporate")
+                    Text("Minimal").tag("minimal")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: theme) { _, val in SpecolaSettings.theme = val }
             }
             Section("Modello LLM") {
                 Picker("Provider", selection: $llmProvider) {

@@ -355,3 +355,52 @@ class TestGenerateFallbackDocx:
         header = doc.sections[0].header
         text = "".join(p.text for p in header.paragraphs)
         assert "SPECOLA" in text.upper()
+
+
+class TestDocxThemes:
+    def test_minimal_theme_creates_file(self, tmp_output_dir):
+        md = "# Title\n\n## Section\n\n- Item 1\n- Item 2\n\nParagraph."
+        path = generate_docx(md, "2026-04-05", tmp_output_dir, theme="minimal")
+        assert Path(path).exists()
+        doc = Document(path)
+        assert len(doc.paragraphs) > 0
+
+    def test_dark_theme_creates_file(self, tmp_output_dir):
+        md = "# Title\n\n## Section\n\n- Item 1\n- Item 2\n\nParagraph."
+        path = generate_docx(md, "2026-04-05", tmp_output_dir, theme="dark")
+        assert Path(path).exists()
+        doc = Document(path)
+        assert len(doc.paragraphs) > 0
+
+    def test_corporate_theme_default(self, tmp_output_dir):
+        md = "# Title\n\n## Section\n\nText."
+        path_default = generate_docx(md, "2026-04-05", tmp_output_dir)
+        path_corp = generate_docx(md, "2026-04-06", tmp_output_dir, theme="corporate")
+        # Both should produce valid files
+        assert Path(path_default).exists()
+        assert Path(path_corp).exists()
+
+    def test_minimal_fallback_creates_file(self, tmp_output_dir):
+        digest = "## Tech\n\n- Item A\n- Item B"
+        path = generate_fallback_docx(digest, "2026-04-05", tmp_output_dir, theme="minimal")
+        assert Path(path).exists()
+        doc = Document(path)
+        texts = [p.text for p in doc.paragraphs]
+        assert any("Analisi non disponibile" in t for t in texts)
+
+    def test_dark_fallback_creates_file(self, tmp_output_dir):
+        digest = "## Tech\n\n- Item A\n- Item B"
+        path = generate_fallback_docx(digest, "2026-04-05", tmp_output_dir, theme="dark")
+        assert Path(path).exists()
+        doc = Document(path)
+        texts = [p.text for p in doc.paragraphs]
+        assert any("Analisi non disponibile" in t for t in texts)
+
+    def test_dark_theme_heading_styles(self, tmp_output_dir):
+        md = "# H1\n\n## H2\n\n### H3\n\nText."
+        path = generate_docx(md, "2026-04-05", tmp_output_dir, theme="dark")
+        doc = Document(path)
+        styles = [p.style.name for p in doc.paragraphs]
+        assert "Heading 1" in styles
+        assert "Heading 2" in styles
+        assert "Heading 3" in styles

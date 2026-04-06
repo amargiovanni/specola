@@ -23,7 +23,7 @@ struct SpecolaApp: App {
             if appState.isGenerating {
                 Image(nsImage: MenuBarIcon.generatingImage(frame: animationFrame))
             } else {
-                Image(nsImage: MenuBarIcon.image(badgeCount: appState.unreadCount))
+                Image(nsImage: MenuBarIcon.image(badgeCount: appState.unreadCount, sparklineData: appState.sparklineData))
             }
         }
         .menuBarExtraStyle(.window)
@@ -81,15 +81,17 @@ struct SpecolaApp: App {
 }
 
 private struct FirstLaunchModifier: ViewModifier {
-    @Environment(\.openSettings) private var openSettings
+    @State private var showOnboarding = false
 
     func body(content: Content) -> some View {
         content
             .task {
                 if !SpecolaSettings.hasCompletedSetup {
-                    openSettings()
-                    SpecolaSettings.hasCompletedSetup = true
+                    showOnboarding = true
                 }
+            }
+            .sheet(isPresented: $showOnboarding) {
+                OnboardingView()
             }
     }
 }

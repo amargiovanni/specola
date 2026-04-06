@@ -46,6 +46,7 @@ enum EngineService {
             "--language", SpecolaSettings.language,
             "--format", SpecolaSettings.outputFormat,
             "--provider", SpecolaSettings.llmProvider,
+            "--theme", SpecolaSettings.theme,
         ]
 
         // Provider-specific arguments

@@ -18,6 +18,7 @@ enum SpecolaSettings {
         static let codexModel = "codexModel"
         static let lmstudioEndpoint = "lmstudioEndpoint"
         static let lmstudioModel = "lmstudioModel"
+        static let theme = "theme"
     }
 
     static var scheduleHour: Int {
@@ -96,6 +97,11 @@ enum SpecolaSettings {
     static var lmstudioModel: String {
         get { defaults.string(forKey: Key.lmstudioModel) ?? "" }
         set { defaults.set(newValue, forKey: Key.lmstudioModel) }
+    }
+
+    static var theme: String {
+        get { defaults.string(forKey: Key.theme) ?? "corporate" }
+        set { defaults.set(newValue, forKey: Key.theme) }
     }
 
     static var supportDir: URL {
