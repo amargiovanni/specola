@@ -9,23 +9,36 @@
 /* Begin PBXBuildFile section */
 		10BC3625F8D07969D1DEC37D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99B0441BAC5F66FE990561C2 /* Assets.xcassets */; };
 		155814A6E9E5A7B70DE7098D /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B556F8BFE313AD4A1A2ED4E1 /* MenuBarView.swift */; };
+		5E67E9D54593DDFC9EE0AC30 /* WidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A128E71CD6C14270CD0768A5 /* WidgetData.swift */; };
 		60A75FB9D83D88E200FD1571 /* SchedulerServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */; };
 		636CE1D72F4DBD9C90C3BD4B /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9761EF4F1B700676F612FFFA /* Settings.swift */; };
+		6B52742EA76FC863207936BD /* SpecolaWidgetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D382BC81FB9D44464F8E7339 /* SpecolaWidgetEntry.swift */; };
 		7D38C09869150EECE70B58F9 /* SpecolaEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1AAAE622D9D446C7F89651 /* SpecolaEntryTests.swift */; };
 		8A2F9E9A2EF0CCDE184C5D65 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 234401155FD81501939B6119 /* SettingsView.swift */; };
 		8ED034F8ABD59B679A3E1B25 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E378F2B9EB98EC3BE89EAE15 /* AppState.swift */; };
 		8F9ECE0CB2D0958CF6AB8E13 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E466A3FDCB8532A08CA27643 /* NotificationService.swift */; };
 		9223E104A3ABEEB7F8F53DD4 /* SpecolaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */; };
 		948C716C661223DA0E86C753 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = F862A9A04CB1813B78420EC2 /* MenuBarIcon.swift */; };
+		A93C4AC6B9C4EE8A6EABACC3 /* SpecolaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACA7DF4DD7A28B3744C6D5D /* SpecolaWidget.swift */; };
 		B23F43A64422CBF13075BA1C /* SpecolaEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677F47EA78B57BE72B75437D /* SpecolaEntry.swift */; };
 		B5C4D639CE7AE0E874EAB7FE /* EngineServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97916B60C2AB5DC6EFD9BB5 /* EngineServiceTests.swift */; };
+		B789DB3BC1B2649C91D1F716 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8CE83A4AF524D030B3B784A /* SwiftUI.framework */; };
+		D6BD3978C6CB8B5DE4346199 /* SpecolaWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77AA0CC34257684EF7A98A33 /* SpecolaWidgetView.swift */; };
 		DEF6D0B032711C46AC95CAC2 /* EngineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923C368DD10FD9CAFF4885C /* EngineService.swift */; };
 		E3028105E46C54D644918583 /* AppStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594D41A7355DC15E72FBBAA9 /* AppStateTests.swift */; };
+		E58406279858E70D92E3A53C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B178126545A688B2B76CC228 /* WidgetKit.framework */; };
 		EBE6044F3C6B2C4580CFD935 /* SchedulerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C474C051AF17E6C65AC944E /* SchedulerService.swift */; };
-		FA12B3C4D5E6F7A8B9C0D1E2 /* WidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56789012345678 /* WidgetData.swift */; };
+		FC5A683CE20786FAAD183407 /* SpecolaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A288B8E738488CDA13DFA8D2 /* SpecolaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		03664FB2604E31AD554FF69E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A6EB78C0A83174F3498FC470 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB9CFF7BC7AF48C9260AAC52;
+			remoteInfo = SpecolaWidgetExtension;
+		};
 		502FDDB338A0E5EB185BBEDE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A6EB78C0A83174F3498FC470 /* Project object */;
@@ -35,27 +48,62 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		59BF7953113BFEB3E6978C6E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FC5A683CE20786FAAD183407 /* SpecolaWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0A218EB6560B70DB9BC794DE /* Specola.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Specola.entitlements; sourceTree = "<group>"; };
+		0FB15ACDF8B16B902851FC9A /* SpecolaWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpecolaWidget.entitlements; sourceTree = "<group>"; };
+		1615140B953EF40A424EAA0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		234401155FD81501939B6119 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4D1AAAE622D9D446C7F89651 /* SpecolaEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaEntryTests.swift; sourceTree = "<group>"; };
 		594D41A7355DC15E72FBBAA9 /* AppStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateTests.swift; sourceTree = "<group>"; };
 		5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpecolaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		677F47EA78B57BE72B75437D /* SpecolaEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaEntry.swift; sourceTree = "<group>"; };
 		6C474C051AF17E6C65AC944E /* SchedulerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerService.swift; sourceTree = "<group>"; };
+		77AA0CC34257684EF7A98A33 /* SpecolaWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaWidgetView.swift; sourceTree = "<group>"; };
 		91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaApp.swift; sourceTree = "<group>"; };
 		9761EF4F1B700676F612FFFA /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		99B0441BAC5F66FE990561C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9FDB6EFD957145E0E385DE4A /* SchedulerServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerServiceTests.swift; sourceTree = "<group>"; };
+		A128E71CD6C14270CD0768A5 /* WidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetData.swift; sourceTree = "<group>"; };
+		A288B8E738488CDA13DFA8D2 /* SpecolaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpecolaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B178126545A688B2B76CC228 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		B556F8BFE313AD4A1A2ED4E1 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		B74BEAA22A38432CBADF135B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B97916B60C2AB5DC6EFD9BB5 /* EngineServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineServiceTests.swift; sourceTree = "<group>"; };
+		CACA7DF4DD7A28B3744C6D5D /* SpecolaWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaWidget.swift; sourceTree = "<group>"; };
+		D382BC81FB9D44464F8E7339 /* SpecolaWidgetEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecolaWidgetEntry.swift; sourceTree = "<group>"; };
 		E378F2B9EB98EC3BE89EAE15 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		E466A3FDCB8532A08CA27643 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		E8CE83A4AF524D030B3B784A /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		EC4F3FD038FBBC771E3213E6 /* Specola.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Specola.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F862A9A04CB1813B78420EC2 /* MenuBarIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIcon.swift; sourceTree = "<group>"; };
 		F923C368DD10FD9CAFF4885C /* EngineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineService.swift; sourceTree = "<group>"; };
-		AB12CD34EF56789012345678 /* WidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D1571492722A850253F72C86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E58406279858E70D92E3A53C /* WidgetKit.framework in Frameworks */,
+				B789DB3BC1B2649C91D1F716 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0CD2DCD9BF1BEE660EB9F8B8 /* Services */ = {
@@ -75,6 +123,7 @@
 				B74BEAA22A38432CBADF135B /* Info.plist */,
 				B556F8BFE313AD4A1A2ED4E1 /* MenuBarView.swift */,
 				234401155FD81501939B6119 /* SettingsView.swift */,
+				0A218EB6560B70DB9BC794DE /* Specola.entitlements */,
 				91E1359C35FACF02F0C753A0 /* SpecolaApp.swift */,
 				B82C5E0EC3FA80F989AC2609 /* Helpers */,
 				D6C14A3B087CC7E6048040E2 /* Models */,
@@ -99,6 +148,8 @@
 			children = (
 				15D26697EBAF2257676712EF /* Specola */,
 				1C339AC4937AD4D7758BCC38 /* SpecolaTests */,
+				8990658052F9B8A6A53563A4 /* SpecolaWidget */,
+				8611F692D6FC481C3CE9544C /* Frameworks */,
 				746F7B17F0A3F1F594E743EC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -108,8 +159,30 @@
 			children = (
 				EC4F3FD038FBBC771E3213E6 /* Specola.app */,
 				5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */,
+				A288B8E738488CDA13DFA8D2 /* SpecolaWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8611F692D6FC481C3CE9544C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E8CE83A4AF524D030B3B784A /* SwiftUI.framework */,
+				B178126545A688B2B76CC228 /* WidgetKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8990658052F9B8A6A53563A4 /* SpecolaWidget */ = {
+			isa = PBXGroup;
+			children = (
+				1615140B953EF40A424EAA0B /* Info.plist */,
+				0FB15ACDF8B16B902851FC9A /* SpecolaWidget.entitlements */,
+				CACA7DF4DD7A28B3744C6D5D /* SpecolaWidget.swift */,
+				D382BC81FB9D44464F8E7339 /* SpecolaWidgetEntry.swift */,
+				77AA0CC34257684EF7A98A33 /* SpecolaWidgetView.swift */,
+			);
+			path = SpecolaWidget;
 			sourceTree = "<group>";
 		};
 		B82C5E0EC3FA80F989AC2609 /* Helpers */ = {
@@ -126,7 +199,7 @@
 				E378F2B9EB98EC3BE89EAE15 /* AppState.swift */,
 				9761EF4F1B700676F612FFFA /* Settings.swift */,
 				677F47EA78B57BE72B75437D /* SpecolaEntry.swift */,
-				AB12CD34EF56789012345678 /* WidgetData.swift */,
+				A128E71CD6C14270CD0768A5 /* WidgetData.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -141,10 +214,12 @@
 				AFF716AE3EA9DE3F23358CAB /* Bundle Python Engine */,
 				A03ABE9F49C08A0394EE8D50 /* Sources */,
 				84A1E1745C0A7A0AE9DDBF98 /* Resources */,
+				59BF7953113BFEB3E6978C6E /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				283355839D25A1AB980BBF65 /* PBXTargetDependency */,
 			);
 			name = Specola;
 			packageProductDependencies = (
@@ -171,6 +246,24 @@
 			productReference = 5BFE0135DD9F1A74BF6D6495 /* SpecolaTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		EB9CFF7BC7AF48C9260AAC52 /* SpecolaWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6E22A334F4DA04108750D94 /* Build configuration list for PBXNativeTarget "SpecolaWidgetExtension" */;
+			buildPhases = (
+				94C64041FA2983F0207EA244 /* Sources */,
+				D1571492722A850253F72C86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SpecolaWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = SpecolaWidgetExtension;
+			productReference = A288B8E738488CDA13DFA8D2 /* SpecolaWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -196,6 +289,7 @@
 			targets = (
 				27E273402375698A851E1D5C /* Specola */,
 				53C1FF9BA87DDDF7F3095568 /* SpecolaTests */,
+				EB9CFF7BC7AF48C9260AAC52 /* SpecolaWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -244,6 +338,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		94C64041FA2983F0207EA244 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A93C4AC6B9C4EE8A6EABACC3 /* SpecolaWidget.swift in Sources */,
+				6B52742EA76FC863207936BD /* SpecolaWidgetEntry.swift in Sources */,
+				D6BD3978C6CB8B5DE4346199 /* SpecolaWidgetView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A03ABE9F49C08A0394EE8D50 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -258,13 +362,18 @@
 				8A2F9E9A2EF0CCDE184C5D65 /* SettingsView.swift in Sources */,
 				9223E104A3ABEEB7F8F53DD4 /* SpecolaApp.swift in Sources */,
 				B23F43A64422CBF13075BA1C /* SpecolaEntry.swift in Sources */,
-				FA12B3C4D5E6F7A8B9C0D1E2 /* WidgetData.swift in Sources */,
+				5E67E9D54593DDFC9EE0AC30 /* WidgetData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		283355839D25A1AB980BBF65 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB9CFF7BC7AF48C9260AAC52 /* SpecolaWidgetExtension */;
+			targetProxy = 03664FB2604E31AD554FF69E /* PBXContainerItemProxy */;
+		};
 		A3727852BD49BB45EA6ADB2A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 27E273402375698A851E1D5C /* Specola */;
@@ -273,6 +382,24 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		000537CFFB29E61B4108C9C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpecolaWidget/SpecolaWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpecolaWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oltrematica.specola.widget;
+				PRODUCT_NAME = SpecolaWidgetExtension;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
 		0C27E37A8FF2C412B00AFA42 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -289,6 +416,24 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Specola.app/Contents/MacOS/Specola";
 			};
 			name = Debug;
+		};
+		4C30058CBAF5A0ACF569BB7A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpecolaWidget/SpecolaWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpecolaWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oltrematica.specola.widget;
+				PRODUCT_NAME = SpecolaWidgetExtension;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
 		};
 		641173A4A16FD3CFAC770CFC /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -479,6 +624,15 @@
 			buildConfigurations = (
 				F2DD49A573CA0897F5E08004 /* Debug */,
 				641173A4A16FD3CFAC770CFC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B6E22A334F4DA04108750D94 /* Build configuration list for PBXNativeTarget "SpecolaWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000537CFFB29E61B4108C9C2 /* Debug */,
+				4C30058CBAF5A0ACF569BB7A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
