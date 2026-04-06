@@ -26,5 +26,16 @@
     <array>
         <string>MacOSX</string>
     </array>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.oltrematica.specola</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>specola</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

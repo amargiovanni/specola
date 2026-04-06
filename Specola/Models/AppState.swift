@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WidgetKit
 
 @Observable
 final class AppState {
@@ -55,12 +56,36 @@ final class AppState {
             history = Array(history.prefix(Self.maxHistoryEntries))
         }
         saveHistory()
+        updateWidgetData()
     }
 
     func markAsRead(_ entry: SpecolaEntry) {
         guard let index = history.firstIndex(where: { $0.id == entry.id }) else { return }
         history[index].read = true
         saveHistory()
+        updateWidgetData()
+    }
+
+    func updateWidgetData() {
+        guard let latest = history.first,
+              let url = WidgetData.fileURL else { return }
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.locale = Locale(identifier: SpecolaSettings.language == "it" ? "it_IT" : "en_US")
+        let dateLabel = formatter.string(from: latest.date)
+
+        let data = WidgetData(
+            date: latest.date,
+            dateLabel: dateLabel,
+            unreadCount: unreadCount,
+            highlights: latest.highlights,
+            latestPath: latest.path
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try? encoder.encode(data).write(to: url)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     func loadProfile() -> String {

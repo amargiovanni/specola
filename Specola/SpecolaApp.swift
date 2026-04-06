@@ -12,6 +12,13 @@ struct SpecolaApp: App {
             MenuBarView()
                 .environment(appState)
                 .modifier(FirstLaunchModifier())
+                .onOpenURL { url in
+                    guard url.scheme == "specola", url.host == "open-latest" else { return }
+                    if let latest = appState.history.first {
+                        NSWorkspace.shared.open(URL(fileURLWithPath: latest.path))
+                        appState.markAsRead(latest)
+                    }
+                }
         } label: {
             if appState.isGenerating {
                 Image(nsImage: MenuBarIcon.generatingImage(frame: animationFrame))
