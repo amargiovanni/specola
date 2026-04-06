@@ -14,6 +14,11 @@ enum SpecolaSettings {
         static let launchAtLogin = "launchAtLogin"
         static let hasCompletedSetup = "hasCompletedSetup"
         static let outputFormat = "outputFormat"
+        static let llmProvider = "llmProvider"
+        static let openaiApiKey = "openaiApiKey"
+        static let openaiModel = "openaiModel"
+        static let lmstudioEndpoint = "lmstudioEndpoint"
+        static let lmstudioModel = "lmstudioModel"
     }
 
     static var scheduleHour: Int {
@@ -70,6 +75,33 @@ enum SpecolaSettings {
     static var outputFormat: String {
         get { defaults.string(forKey: Key.outputFormat) ?? "docx" }
         set { defaults.set(newValue, forKey: Key.outputFormat) }
+    }
+
+    // MARK: - LLM Provider
+
+    static var llmProvider: String {
+        get { defaults.string(forKey: Key.llmProvider) ?? "claude" }
+        set { defaults.set(newValue, forKey: Key.llmProvider) }
+    }
+
+    static var openaiApiKey: String {
+        get { defaults.string(forKey: Key.openaiApiKey) ?? "" }
+        set { defaults.set(newValue, forKey: Key.openaiApiKey) }
+    }
+
+    static var openaiModel: String {
+        get { defaults.string(forKey: Key.openaiModel) ?? "gpt-4o" }
+        set { defaults.set(newValue, forKey: Key.openaiModel) }
+    }
+
+    static var lmstudioEndpoint: String {
+        get { defaults.string(forKey: Key.lmstudioEndpoint) ?? "http://localhost:1234/v1/chat/completions" }
+        set { defaults.set(newValue, forKey: Key.lmstudioEndpoint) }
+    }
+
+    static var lmstudioModel: String {
+        get { defaults.string(forKey: Key.lmstudioModel) ?? "" }
+        set { defaults.set(newValue, forKey: Key.lmstudioModel) }
     }
 
     static var supportDir: URL {
