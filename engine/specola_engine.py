@@ -7,6 +7,14 @@ Two-phase analysis:
 """
 from __future__ import annotations
 
+import os
+
+# Workaround: on macOS, after ThreadPoolExecutor loads the Network framework,
+# subprocess.run() → fork() crashes in the atfork handler of libnetworkextension
+# ("multi-threaded process forked / crashed on child side of fork pre-exec").
+# This disables the ObjC fork safety check that triggers the crash.
+os.environ.setdefault("OBJC_DISABLE_INITIALIZE_FORK_SAFETY", "YES")
+
 import argparse
 import json
 import logging
@@ -23,9 +31,19 @@ from src.prompt_builder import build_category_prompt, build_synthesis_prompt
 from src.analyzer import analyze_with_claude, analyze
 from src.doc_generator import generate_docx, generate_fallback_docx
 from src.html_generator import generate_html
-from src.pdf_generator import generate_pdf
-from src.epub_generator import generate_epub
 from src.portal_generator import regenerate_portal_index, extract_highlights
+
+# Lazy imports: weasyprint and epub load C libraries (libgobject, libgio,
+# libpango) whose atfork handlers crash when subprocess.run() calls fork()
+# after ThreadPoolExecutor has been used for feed fetching.
+# Import them only when the output format actually requires them.
+def _lazy_generate_pdf(html_path, date, output_dir):
+    from src.pdf_generator import generate_pdf
+    return generate_pdf(html_path, date, output_dir)
+
+def _lazy_generate_epub(markdown, date, output_dir, language, theme="corporate"):
+    from src.epub_generator import generate_epub
+    return generate_epub(markdown, date, output_dir, language, theme=theme)
 
 logger = logging.getLogger("specola")
 
@@ -403,9 +421,9 @@ def run_engine(
         if output_format == "docx":
             main_path = generate_docx(final_markdown, today, output_dir, theme=theme)
         elif output_format == "pdf":
-            main_path = generate_pdf(html_path, today, output_dir)
+            main_path = _lazy_generate_pdf(html_path, today, output_dir)
         elif output_format == "epub":
-            main_path = generate_epub(final_markdown, today, output_dir, language, theme=theme)
+            main_path = _lazy_generate_epub(final_markdown, today, output_dir, language, theme=theme)
         else:
             main_path = html_path
     else:
