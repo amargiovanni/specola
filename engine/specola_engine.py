@@ -163,12 +163,14 @@ def _split_batched_analysis(
     """Try to split a batched LLM analysis back into per-category sections.
 
     Looks for ## Category headers in the output. If splitting fails,
-    stores the entire analysis under a combined key.
+    stores the entire analysis under a single combined key (not duplicated
+    across every unmatched category).
     """
     import re
     cat_list = list(category_names)
     sections: dict[str, list[str]] = {}
     current_cat = None
+    preamble: list[str] = []  # lines before any matched header
 
     for line in analysis.strip().splitlines():
         # Match ## headers — try exact match with known category names
@@ -183,18 +185,33 @@ def _split_batched_analysis(
                 current_cat = matched
                 sections[current_cat] = []
                 continue
+            else:
+                # Unrecognized header — keep it as content under current category
+                if current_cat is not None:
+                    sections.setdefault(current_cat, []).append(line)
+                else:
+                    preamble.append(line)
+                continue
         if current_cat is not None:
             sections.setdefault(current_cat, []).append(line)
+        else:
+            preamble.append(line)
 
     if sections:
         for cat, lines in sections.items():
             results[cat] = "\n".join(lines).strip()
-        # Any categories not found in the split get the full analysis
-        for cat in cat_list:
-            if cat not in results:
-                results[cat] = analysis.strip()
+        # Categories not found in the split are simply skipped — their
+        # content is already covered by the matched sections.  Assigning
+        # the full output to each unmatched category caused massive
+        # repetition in the final briefing.
+        unmatched = [c for c in cat_list if c not in results]
+        if unmatched:
+            logger.info(
+                "  Batched split: %d matched, %d unmatched (skipped): %s",
+                len(sections), len(unmatched), ", ".join(unmatched),
+            )
     else:
-        # Could not split — store under combined key
+        # Could not split at all — store under combined key
         combined_key = " / ".join(cat_list)
         results[combined_key] = analysis.strip()
 

@@ -245,10 +245,11 @@ def _format_digest_compact(items_by_category: dict, date: str) -> str:
             source = item.get("source", "")
             link = item.get("link", "")
             summary = item.get("summary", "")
-            # One-line header: title | source | link
-            header = f"- **{title}** ({source})"
+            # One-line header: title with source as markdown link
             if link:
-                header += f" {link}"
+                header = f"- **{title}** [{source}]({link})"
+            else:
+                header = f"- **{title}** ({source})"
             lines.append(header)
             if summary:
                 lines.append(f"  {summary}")

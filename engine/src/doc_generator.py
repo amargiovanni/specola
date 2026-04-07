@@ -228,13 +228,15 @@ def _add_hyperlink(paragraph, text: str, url: str, colors: dict[str, str] | None
     part = paragraph.part
     r_id = part.relate_to(url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink", is_external=True)
 
+    # w:sz expects integer half-points (21 = 10.5pt)
+    sz_half_pts = int(10.5 * 2)
     hyperlink = parse_xml(
         f'<w:hyperlink {nsdecls("w")} r:id="{r_id}" {nsdecls("r")}>'
         f'  <w:r>'
         f'    <w:rPr>'
-        f'      <w:rStyle w:val="Hyperlink"/>'
         f'      <w:color w:val="{c["link_color"]}"/>'
-        f'      <w:sz w:val="{10.5 * 2}"/>'
+        f'      <w:sz w:val="{sz_half_pts}"/>'
+        f'      <w:szCs w:val="{sz_half_pts}"/>'
         f'      <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>'
         f'      <w:u w:val="single"/>'
         f'    </w:rPr>'
